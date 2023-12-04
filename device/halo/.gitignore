@@ -1,0 +1,13 @@
+# env
+__pycache__
+.venv
+
+# setup
+Raspberry-Pi-Installer-Scripts
+i2smic.py
+.lgd**
+**/*.log
+
+# files/media
+data/**
+!data/.gitkeep

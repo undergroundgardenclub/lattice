@@ -1,0 +1,7 @@
+adafruit-blinka
+adafruit-circuitpython-debouncer
+adafruit-python-shell
+numpy
+picamera2
+pyaudio
+RPI.GPIO

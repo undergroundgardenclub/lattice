@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  backend_api:
+    build:
+      context: ./backend/api
+    volumes:
+      - ./backend/api/src:/usr/src/backend/api/src
+      - ./backend/api/requirements.txt:/usr/src/backend/api/requirements.txt
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database_app
+      - redis_queue
+    env_file:
+      - ./.env
+    environment:
+      - DATABASE_APP_HOST=database_app # within docker network, we use service name
+      - TARGET_ENV=local
+      - TARGET_SERVICE=api
+    command: python -u ./src/start.py # using Sanic's auto-reload, but need watch if doing multiprocessing
+    # command: sh -c "watchmedo auto-restart --pattern="*.py" --directory="." --recursive -- python -u ./src/start.py"
+
+  database_app:
+    image: ankane/pgvector:v0.5.1
+    environment:
+      POSTGRES_DB: coordination
+      POSTGRES_USER: coordination
+      POSTGRES_PASSWORD: coordination
+    ports:
+      - "5432:5432"
+
+  redis_queue:
+    image: redis:7.2.3
+    ports:
+      - "6379:6379"
