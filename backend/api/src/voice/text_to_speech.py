@@ -1,11 +1,10 @@
-from pydub import AudioSegment
-from io import BufferedReader, BytesIO
+from io import BytesIO
 import requests
 import env
 
 CHUNK_SIZE = 1024
 
-def eleven_labs_text_to_speech(text: str, file_path: str, voice_id="Zlb1dXrM653N07WRdFW3", output_format="mp3_44100_64") -> BytesIO:
+def text_to_speech(text: str, file_path: str, voice_id="Zlb1dXrM653N07WRdFW3", output_format="mp3_44100_64") -> BytesIO:
     print(f"eleven_labs_text_to_speech: '{text}'")
     headers = {
         "Accept": "audio/mpeg",
@@ -36,14 +35,3 @@ def eleven_labs_text_to_speech(text: str, file_path: str, voice_id="Zlb1dXrM653N
     return audio_io
 
 
-def mp3_to_wav(mp3_iobytes: BytesIO) -> BytesIO:
-    print('mp3_to_wav')
-    audio = AudioSegment.from_mp3(mp3_iobytes)
-    # Create BytesIO obj to hold data
-    wav_io = BytesIO()
-    # Export audio to as WAV (fyi, this requires an external dependency, check dockerfile)
-    audio.export(wav_io, format="wav")
-    # Seek to beginning of io
-    wav_io.seek(0)
-    # Return IO
-    return wav_io
