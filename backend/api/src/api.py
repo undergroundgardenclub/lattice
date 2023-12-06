@@ -29,8 +29,8 @@ api_app.blueprint(blueprint_intake)
 # RUN
 def start_api():
     api_app.run(
-        auto_reload=True, # auto-reload only for dev. done via watchdog pkg in docker-compose file
+        auto_reload=False, # auto-reload only for dev. done via watchdog pkg in docker-compose file
         dev=False,
-        host=env.env_get_api_host(),
-        port=env.env_get_api_port(),
+        host=env.env_api_host(),
+        port=env.env_api_port(),
         workers=1)

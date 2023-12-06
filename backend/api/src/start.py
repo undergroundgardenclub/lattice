@@ -1,5 +1,7 @@
 # import torch
 from api import start_api
+from worker import start_worker
+from env import env_target_service
 
 # CONFIG
 # Restrict PyTorch Processor Usage (blocks other processors):
@@ -10,5 +12,11 @@ from api import start_api
 # INIT
 # Maybe one day we multiprocess api/workers
 if __name__ == "__main__":
-    print("INFO (start.py) start")
-    start_api()
+    service = env_target_service()
+    print("INFO (start.py) start: ", service)
+    # --- worker api (using bull, not sanic's worker system so workers can use other languages)
+    if service == 'worker_api':
+        start_worker()
+    # --- api
+    if service == 'api':
+        start_api()
