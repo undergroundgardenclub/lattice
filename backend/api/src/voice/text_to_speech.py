@@ -9,7 +9,7 @@ def text_to_speech(text: str, file_path: str, voice_id="Zlb1dXrM653N07WRdFW3", o
     headers = {
         "Accept": "audio/mpeg",
         "Content-Type": "application/json",
-        "xi-api-key": env.env_get_eleven_labs_api_key(),
+        "xi-api-key": env.env_eleven_labs_api_key(),
     }
     json = {
     "text": text,

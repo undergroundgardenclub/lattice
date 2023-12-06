@@ -3,7 +3,7 @@ from typing import Optional
 import pydash as _
 import requests
 from time import sleep
-from env import env_get_assembly_ai_api_key
+from env import env_assembly_ai_api_key
 
 # HACK: just carrying this over from gideon
 TOKENIZING_STRING_SENTENCE_SPLIT_MIN_LENGTH = 80
@@ -16,7 +16,7 @@ def speech_to_text(file_url: Optional[str] = None, transcript_id: Optional[str] 
     if transcript_id == None:
         transcript_response = requests.post(
             "https://api.assemblyai.com/v2/transcript",
-            headers={ "authorization": env_get_assembly_ai_api_key(), "content-type": "application/json" },
+            headers={ "authorization": env_assembly_ai_api_key(), "content-type": "application/json" },
             json={ "audio_url": file_url }
         )
         print("[speech_to_text] transcript requested", transcript_response.json()['id'], transcript_response.json()['status'])
@@ -28,7 +28,7 @@ def speech_to_text(file_url: Optional[str] = None, transcript_id: Optional[str] 
     while is_transcript_complete == False:
         transcript_check_response = requests.get(
             "https://api.assemblyai.com/v2/transcript/{t_id}".format(t_id=t_id),
-            headers={ "authorization": env_get_assembly_ai_api_key() },
+            headers={ "authorization": env_assembly_ai_api_key() },
         )
         print(f"[speech_to_text] transcript {t_id} status: '{transcript_check_response.json()['status']}'")
         if transcript_check_response.json()['status'] == 'completed':

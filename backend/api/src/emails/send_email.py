@@ -1,6 +1,6 @@
 from sendgrid import SendGridAPIClient
 from typing import List
-from env import env_get_sendgrid_api_key
+from env import env_sendgrid_api_key
 
 from_email = "x@markthemark.com"
 
@@ -22,7 +22,7 @@ def send_email(to_emails: List[str], subject: str, html: str, files: List = []) 
         'files': files
     }
     # --- send
-    sg = SendGridAPIClient(env_get_sendgrid_api_key())
+    sg = SendGridAPIClient(env_sendgrid_api_key())
     response = sg.send(payload)
     # --- eval response (ex: print err)
     print(f"[send_email] response: ", response.status_code)
