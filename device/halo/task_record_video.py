@@ -9,7 +9,7 @@ from env import env_recording_frame_rate
 video_encoder = H264Encoder(bitrate=10000000)
 video_frame_rate = env_recording_frame_rate()
 video_frame_duration_limit = int(1_000_000 / video_frame_rate) # check manual for this recipocal calc
-video_size = (1600, 900) # (1920, 1080) is big if recording long term, (1280, 720) seemed blurry with movement is a hinderance. err'ing to start on higher quality
+video_size = (1280, 720) # (1600, 900) seems great, (1920, 1080) is big if recording long term, (1280, 720) seemed blurry with movement is a hinderance. err'ing to start on higher quality
 
 
 # LOOP
