@@ -3,6 +3,7 @@ from sanic.response import json
 from sanic_cors import CORS
 import env
 from middleware.error_handler import APIErrorHandler
+from intake.routes import blueprint_intake
 
 
 # INIT
@@ -16,7 +17,13 @@ CORS(api_app)
 api_app.error_handler = APIErrorHandler()
 
 
-# ROUTES (blueprint = top level route/prefix to prevent naming colissions)
+# ROUTES
+# --- health
+@api_app.route('/health', methods=['GET'])
+def app_route_health(_):
+    return json({ 'status': 'success' })
+# --- intake (streams/recordings)
+api_app.blueprint(blueprint_intake)
 
 
 # RUN
