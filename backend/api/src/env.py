@@ -13,6 +13,18 @@ def env_get_api_host() -> str:
 def env_get_api_port() -> int:
     return int(_env_getter('API_PORT'))
 
+# ASSEMBLY AI
+def env_get_assembly_ai_api_key():
+    return _env_getter('ASSEMBLY_AI_API_KEY')
+
+# AWS
+def env_get_aws_access_key_id():
+    return _env_getter('AWS_ACCESS_KEY_ID')
+def env_get_aws_secret_access_key():
+    return _env_getter('AWS_SECRET_ACCESS_KEY')
+def env_get_aws_s3_files_bucket():
+    return _env_getter('AWS_FILES_BUCKET')
+
 # ELEVENT LABS
 def env_get_eleven_labs_api_key():
     return _env_getter('ELEVENT_LABS_API_KEY')
@@ -40,6 +52,10 @@ def env_queue_host():
     return _env_getter('QUEUE_HOST')
 def env_queue_port():
     return _env_getter('QUEUE_PORT')
+
+# SENGRID
+def env_get_sendgrid_api_key():
+    return _env_getter('SENDGRID_API_KEY')
 
 # # INITIALIZE
 # def set_secrets_on_env():
