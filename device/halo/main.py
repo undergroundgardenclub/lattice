@@ -8,6 +8,7 @@ from task_record import task_record
 
 
 # SETUP
+print('[main] SETUP')
 # --- peripherals (maybe should be global references for control overrides by subprocesses?)
 record_button_input = digitalio.DigitalInOut(PIN_RECORD_BUTTON)
 record_button_input.switch_to_input(pull=digitalio.Pull.UP) # if button pressed, button.fell = True
@@ -24,11 +25,14 @@ process_events = {
 
 
 # LOOP
+print('[main] LOOP')
 try:
     while True:
-        # peripheral state updates
+        # SENSORY UPDATES
         record_button.update()
-        # ... wait for record_button press to start a recording
+
+        # ACT
+        # --- recording
         if record_button.fell == True:
             # ... if not recording, set bool = True so we don't re-trigger
             if process_task_record == None:
@@ -48,4 +52,4 @@ try:
                 process_task_record = None
                 print('[loop] Recording: Stopped')
 except Exception as error:
-    print("ERROR", error)
+    print("[loop] error: ", error)

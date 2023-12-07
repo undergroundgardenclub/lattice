@@ -83,3 +83,8 @@ Install binaries for use of pyaudio, then install pyaudio
 sudo apt-get install portaudio19-dev
 pip install pyaudio
 ```
+
+
+# Wifi
+
+FYI, need to set for multiple locations if moving between spaces: https://raspberrypi.stackexchange.com/questions/11631/how-to-setup-multiple-wifi-networks

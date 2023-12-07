@@ -1,10 +1,12 @@
 import board
 import digitalio
 import multiprocessing
+import os
 import sys
 import time
-from env import env_directory_data, PIN_LED
+from env import env_device_id, env_directory_data, PIN_LED
 from utils_media import combine_h264_and_wav_into_mp4
+from utils_network import send_api_recording
 
 # SETUP
 # --- peripheral: LED for recording indicator
@@ -40,9 +42,12 @@ def task_record(process_events, media_id):
     process_task_record_video.join()
     # --- combing video/audio
     combine_h264_and_wav_into_mp4(media_path_video_h264, media_path_audio_wav, media_path_final_mp4)
+    # --- send API file payload
+    send_api_recording(media_path_final_mp4, dict(device_id=env_device_id()))
     # --- clean up src files
-    # os.remove(media_path_video_h264)
-    # os.remove(media_path_audio_wav)
+    os.remove(media_path_video_h264)
+    os.remove(media_path_audio_wav)
+    os.remove(media_path_final_mp4)
 
     # EXIT
     # --- led indicator

@@ -17,7 +17,10 @@ def task_record_video(process_events, media_path_video_h264):
     print('[process] task_record_video: fork')
     # START
     with Picamera2() as picam2:
-        picam2_config = picam2.create_video_configuration({ 'size': video_size }, controls={"FrameDurationLimits": (video_frame_duration_limit, video_frame_duration_limit)})
+        picam2_config = picam2.create_video_configuration({ 'size': video_size }, controls={
+            # "ExposureValue": 0.5, # not sure this is worthwhile, https://github.com/raspberrypi/picamera2/issues/652#issuecomment-1539789593
+            "FrameDurationLimits": (video_frame_duration_limit, video_frame_duration_limit)
+        })
         picam2.configure(picam2_config)
         # recording kicks off at paths provided by caller (that way post-recording, files can be modified and later removed)
         picam2.start_recording(video_encoder, output=media_path_video_h264, quality=Quality.MEDIUM)
