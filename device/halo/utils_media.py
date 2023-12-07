@@ -1,6 +1,7 @@
 import numpy
 import subprocess
-from env import env_recording_frame_rate, env_recording_sample_rate
+import time
+from env import env_device_id, env_recording_frame_rate, env_recording_sample_rate
 
 def convert_h264_to_mp4(input_file: str, output_file: str, frame_rate: int):
     command = ["ffmpeg", "-r", str(frame_rate), "-i", input_file, "-c:v", "copy", "-c:a", "copy", output_file]
@@ -24,11 +25,5 @@ def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_
     ]
     subprocess.run(command, check=True)
 
-# https://stackoverflow.com/questions/71039077/how-can-i-change-the-volume-of-a-stream-playing-in-pyaudio
-def audio_frames_set_volume(frames: list, volume: int):
-    """ Change value of list of audio chunks """
-    sound_level = (volume / 100.)
-    for i in range(len(frames)):
-        chunk = numpy.fromstring(frames[i], numpy.int16)
-        chunk = chunk * sound_level
-        frames[i] = chunk.astype(numpy.int16)
+def generate_media_id():
+    return f"{env_device_id()}-{int(time.time())}"

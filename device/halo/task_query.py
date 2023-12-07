@@ -1,12 +1,10 @@
-import board
 import digitalio
 import multiprocessing
 import os
 import sys
-import time
 from env import env_device_id, env_directory_data, PIN_LED
 from utils_media import combine_h264_and_wav_into_mp4
-from utils_network import send_api_recording
+from utils_network import send_api_query
 
 # SETUP
 # --- peripheral: LED for recording indicator
@@ -23,11 +21,9 @@ def process_task_record_video_fork(pe, media_path_video_h264):
 
 
 # LOOP
-def task_record(process_events, media_id):
-    print('[process] task_record: fork')
+def task_query(process_events, media_id):
+    print('[process] task_query: fork')
     # START
-    # --- led indicator
-    led_recording.value = True
     # --- prep processors
     media_path_video_h264 = f"{env_directory_data()}/{media_id}.h264"
     media_path_audio_wav = f"{env_directory_data()}/{media_id}.wav"
@@ -37,13 +33,15 @@ def task_record(process_events, media_id):
     # --- record
     process_task_record_audio.start()
     process_task_record_video.start()
+    # --- led indicator
+    led_recording.value = True
     # --- awaiting (aka blocking till resolves)
     process_task_record_audio.join()
     process_task_record_video.join()
     # --- combing video/audio
     combine_h264_and_wav_into_mp4(media_path_video_h264, media_path_audio_wav, media_path_final_mp4)
     # --- send API file payload
-    send_api_recording(media_path_final_mp4, dict(device_id=env_device_id()))
+    send_api_query(media_path_final_mp4, dict(device_id=env_device_id()))
     # --- clean up src files
     os.remove(media_path_video_h264)
     os.remove(media_path_audio_wav)
@@ -53,5 +51,5 @@ def task_record(process_events, media_id):
     # --- led indicator
     led_recording.value = False
     # --- process exit
-    print('[process] task_record: exit')
+    print('[process] task_query: exit')
     sys.exit(0)

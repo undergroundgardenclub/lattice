@@ -3,7 +3,6 @@ import sys
 import time
 import wave
 from env import env_recording_frame_rate, env_recording_sample_rate
-from utils_media import audio_frames_set_volume
 
 # SETUP
 # --- peripheral: microphone (doing USB for now)
@@ -28,7 +27,7 @@ def task_record_audio(process_events, media_path_audio_wav):
         frames.append(data)
 
     # EXIT
-    # --- adjust volume (skipping for now to reduce onboard processing)
+    # --- adjust volume (skipping for now to reduce onboard processing: # https://stackoverflow.com/questions/71039077/how-can-i-change-the-volume-of-a-stream-playing-in-pyaudio)
     # audio_frames_set_volume(frames, 75)
     # --- stop recording streams/audio instance
     stream.stop_stream()

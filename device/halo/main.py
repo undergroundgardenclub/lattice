@@ -1,10 +1,9 @@
 from adafruit_debouncer import Debouncer
-import board
 import digitalio
 import multiprocessing
 import time
-from env import env_device_id, PIN_RECORD_BUTTON
-from task_record import task_record 
+from env import PIN_RECORD_BUTTON
+from utils_media import generate_media_id 
 
 
 # SETUP
@@ -26,6 +25,16 @@ interaction_active = None
 process_events = {
     'event_stop_recording': multiprocessing.Event()
 }
+# --- recording
+process_task_recording = None # if we have a process obj here, it's in motion
+def process_task_recording_fork(pe, media_id):
+    import task_recording # wrapper function so we only import in the new processor and don't have duplicate references
+    task_recording.task_recording(pe, media_id)
+# --- query
+process_task_query = None # if we have a process obj here, it's in motion
+def process_task_query_fork(pe, media_id):
+    import task_query # wrapper function so we only import in the new processor and don't have duplicate references
+    task_query.task_query(pe, media_id)
 
 
 # INTERACTION FNS
@@ -33,35 +42,33 @@ process_events = {
 def interaction_press_single():
     print('[interaction_press_single] triggered')
 
-# --- double (recording)
-process_task_record = None # if we have a process obj here, it's in motion
-def process_task_record_fork(pe, media_id):
-    import task_record # wrapper function so we only import in the new processor and don't have duplicate references
-    task_record.task_record(pe, media_id)
-
+# --- double
 def interaction_press_double():
     print('[interaction_press_double] triggered')
-    global process_task_record # means we can reach outside our functions scope
-    print(f'[interaction_press_double] recording: {"started" if process_task_record == None else "stopping"}')
-    if process_task_record == None:
-        # start process if one doesn't exist
-        media_id = f"{env_device_id()}-{int(time.time())}"
-        process_task_record = multiprocessing.Process(target=process_task_record_fork, args=(process_events, media_id))
-        process_task_record.start()
+    global process_task_recording # means we can reach outside our functions scope
+    print(f'[interaction_press_double] recording: {"started" if process_task_recording == None else "stopping"}')
+    if process_task_recording == None: # start process if one doesn't exist
+        process_task_recording = multiprocessing.Process(target=process_task_recording_fork, args=(process_events, generate_media_id()))
+        process_task_recording.start()
     else:
-        # trigger stop event
-        process_events['event_stop_recording'].set()
-        # wait for process to resolve
-        process_task_record.join()
-        # clear process reference. and "unset" which we are using for control flow (maybe start should be this way too rather than None)
-        process_events['event_stop_recording'].clear()
-        process_task_record = None
-        print('[interaction_press_double] recording: stopped')
+        process_events['event_stop_recording'].set() # trigger stop event
+        process_task_recording.join() # wait for process to resolve
+        process_events['event_stop_recording'].clear() # clear process reference. and "unset" which we are using for control flow (maybe start should be this way too rather than None)
+        process_task_recording = None
 
 # --- long press
 def interaction_press_long(is_button_pressed):
     print('[interaction_press_long] triggered', is_button_pressed)
-    return
+    global process_task_query
+    print(f'[interaction_press_double] query: {"started" if process_task_query == None else "stopping"}')
+    if is_button_pressed == True:
+        process_task_query = multiprocessing.Process(target=process_task_query_fork, args=(process_events, generate_media_id()))
+        process_task_query.start()
+    else:
+        process_events['event_stop_recording'].set()
+        process_task_query.join()
+        process_events['event_stop_recording'].clear()
+        process_task_query = None
 
 
 # LOOP
