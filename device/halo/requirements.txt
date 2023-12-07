@@ -4,5 +4,6 @@ adafruit-python-shell
 numpy
 picamera2
 pyaudio
+pygame
 requests
 RPI.GPIO

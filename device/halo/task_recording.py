@@ -33,6 +33,8 @@ def task_recording(process_events, media_id):
     # --- record
     process_task_record_audio.start()
     process_task_record_video.start()
+
+    # AWAIT
     # --- led indicator
     led_recording.value = True
     # --- awaiting (aka blocking till resolves)

@@ -74,6 +74,12 @@ sudo pip install adafruit-python-shell --break-system-packages
 wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/i2smic.py
 sudo python3 i2smic.py
 ```
+
+Detecting devices with audio input can be done:
+```
+arecord -l
+```
+
 Commands
 https://docs.circuitpython.org/en/latest/shared-bindings/audiobusio/index.html
 

@@ -4,8 +4,8 @@ import env
 
 CHUNK_SIZE = 1024
 
-def text_to_speech(text: str, file_path: str, voice_id="Zlb1dXrM653N07WRdFW3", output_format="mp3_44100_64") -> BytesIO:
-    print(f"eleven_labs_text_to_speech: '{text}'")
+def text_to_speech(text: str, voice_id="Zlb1dXrM653N07WRdFW3", output_format="mp3_44100_64") -> BytesIO:
+    print(f"[text_to_speech]: '{text}'")
     headers = {
         "Accept": "audio/mpeg",
         "Content-Type": "application/json",

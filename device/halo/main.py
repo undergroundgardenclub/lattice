@@ -48,7 +48,8 @@ def interaction_press_double():
     global process_task_recording # means we can reach outside our functions scope
     print(f'[interaction_press_double] recording: {"started" if process_task_recording == None else "stopping"}')
     if process_task_recording == None: # start process if one doesn't exist
-        process_task_recording = multiprocessing.Process(target=process_task_recording_fork, args=(process_events, generate_media_id()))
+        media_id = generate_media_id()
+        process_task_recording = multiprocessing.Process(target=process_task_recording_fork, args=(process_events, media_id))
         process_task_recording.start()
     else:
         process_events['event_stop_recording'].set() # trigger stop event
@@ -62,7 +63,8 @@ def interaction_press_long(is_button_pressed):
     global process_task_query
     print(f'[interaction_press_double] query: {"started" if process_task_query == None else "stopping"}')
     if is_button_pressed == True:
-        process_task_query = multiprocessing.Process(target=process_task_query_fork, args=(process_events, generate_media_id()))
+        media_id = generate_media_id()
+        process_task_query = multiprocessing.Process(target=process_task_query_fork, args=(process_events, media_id))
         process_task_query.start()
     else:
         process_events['event_stop_recording'].set()

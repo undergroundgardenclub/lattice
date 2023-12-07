@@ -1,3 +1,4 @@
+import json
 import time
 from emails.send_email import send_email
 from emails.fill_email_template_html import fill_email_template_html_tasks_summary
@@ -8,12 +9,10 @@ from voice.speech_to_text import speech_to_text
 from vision.cv import video_frame_at_second
 
 
-async def job_intake_recording(job, job_token):
+async def _job_intake_recording(recording_file_key: str, recording_file_url: str):
     """
     Take a MP4 file, transcribe it, organize information into an outline, find relevant still image frames, and send update email
     """
-    recording_file_key = job.data['file_key']
-    recording_file_url = job.data['file_url']
 
     # --- transcribe (w/ timestamps on sections) -> text
     transcript = speech_to_text(recording_file_url)
@@ -21,8 +20,6 @@ async def job_intake_recording(job, job_token):
     
     # --- create outline of what occurred -> text[]
     session_task_headers = prompt_recording_transcript_to_task_headers(transcript['text'])
-    print(f"[intake_recording]", session_task_headers)
-
     # BREAK: if no task headers, it's unclear that this video is of a protocol, skip processing/email
     if len(session_task_headers) == 0:
         return
@@ -30,7 +27,7 @@ async def job_intake_recording(job, job_token):
     # --- for each outline sub-header write summary of what happened -> text[][]
     session_task_outline = prompt_recording_transcript_to_task_outline(transcript['sentences'], session_task_headers)
     print(f"[intake_recording]", session_task_outline)
-    # session_task_outline = [{'taskName': 'Soldering', 'taskActions': ['Started soldering task', 'Mentioned concern about the dark environment'], 'taskStartAtSecond': 34, 'taskEndAtSecond': 54, 'taskThoughts': ['Sensor delay issue at the start', 'Video darkness issue']}, {'taskName': 'Setting Thermostat for Soldering Iron', 'taskActions': ['Set soldering iron to 375 degrees Celsius'], 'taskStartAtSecond': 54, 'taskEndAtSecond': 66, 'taskThoughts': []}, {'taskName': 'Drinking Halls Water', 'taskActions': ['Drank Halls water for palate'], 'taskStartAtSecond': 67, 'taskEndAtSecond': 78, 'taskThoughts': []}, {'taskName': 'Bathroom Break', 'taskActions': ['Took a bathroom break', "Contemplated whether to go 'number one or two'"], 'taskStartAtSecond': 79, 'taskEndAtSecond': 92, 'taskThoughts': ['Concerned about the sound sync and potential injury from soldering board']}]
+    # session_task_outline = [{'taskName': 'Soldering', 'taskSummary': 'Task involving soldering components.', 'taskActions': ['Setting soldering iron to 375 degrees Celsius.'], 'taskObservation': 'After soldering, the individual moves on to the next task.', 'taskStartAtSecond': 34, 'taskEndAtSecond': 66}, {'taskName': 'Drink Halls Water', 'taskSummary': 'Task involving drinking Halls water.', 'taskActions': ['Drinking Halls water to refresh palate.'], 'taskObservation': 'The individual drinks Halls water after soldering.', 'taskStartAtSecond': 67, 'taskEndAtSecond': 78}, {'taskName': 'Bathroom Break', 'taskSummary': 'Task involving a bathroom break.', 'taskActions': ['Going to the bathroom for either a one or two.'], 'taskObservation': 'The individual contemplates the sound sync while concerned about the board melting to their skin.', 'taskStartAtSecond': 79, 'taskEndAtSecond': 92}]
     
     # --- grab image frames from time points and append to email sections (appending to dict because we need to create html img cid references and file data objs)
     video_file_bytes = get_stored_file_bytes(recording_file_key) # TODO: request.files.get('file') but writing offline atm
@@ -60,3 +57,11 @@ async def job_intake_recording(job, job_token):
 
     # --- return something?
     return
+
+async def job_intake_recording(job, job_token):
+    # --- get params
+    recording_file_key = job.data['file_key']
+    recording_file_url = job.data['file_url']
+    # --- strinigfy payload to transfer over the wire
+    payload = _job_intake_recording(recording_file_key, recording_file_url)
+    return json.dumps(payload)
