@@ -8,7 +8,7 @@ from voice.text_to_speech import text_to_speech
 from vision.cv import video_frame_at_second
 
 
-async def _job_intake_query(recording_file_key, recording_file_url):
+async def _job_intake_query(recording_file_key: str, recording_file_url: str):
     """
     Take a MP4 file, analzye it to answer a question, generate speech audio, send that back
     """

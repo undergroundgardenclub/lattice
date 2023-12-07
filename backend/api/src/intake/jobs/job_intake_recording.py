@@ -1,3 +1,4 @@
+import json
 import time
 from emails.send_email import send_email
 from emails.fill_email_template_html import fill_email_template_html_tasks_summary
@@ -8,12 +9,10 @@ from voice.speech_to_text import speech_to_text
 from vision.cv import video_frame_at_second
 
 
-async def job_intake_recording(job, job_token):
+async def _job_intake_recording(recording_file_key: str, recording_file_url: str):
     """
     Take a MP4 file, transcribe it, organize information into an outline, find relevant still image frames, and send update email
     """
-    recording_file_key = job.data['file_key']
-    recording_file_url = job.data['file_url']
 
     # --- transcribe (w/ timestamps on sections) -> text
     transcript = speech_to_text(recording_file_url)
@@ -58,3 +57,11 @@ async def job_intake_recording(job, job_token):
 
     # --- return something?
     return
+
+async def job_intake_recording(job, job_token):
+    # --- get params
+    recording_file_key = job.data['file_key']
+    recording_file_url = job.data['file_url']
+    # --- strinigfy payload to transfer over the wire
+    payload = _job_intake_recording(recording_file_key, recording_file_url)
+    return json.dumps(payload)

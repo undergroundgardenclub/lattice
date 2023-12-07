@@ -27,9 +27,8 @@ async def app_route_intake_query(request):
     # --- save file to S3 and database. needed for API calls later
     recording_file_key, recording_file_url = intake_file_preprocessing(request.files.get('file'))
     # --- start job (TODO: switch to queue when we can access job data when they're finished)
-    # job = await queue_add_job(queues['intake_query'], { "file_key": recording_file_key, "file_url": recording_file_url })
-    job_data = await _job_intake_query(recording_file_key, recording_file_url)
-    answer_audio_file_url = job_data['file_url']
+    job = await queue_add_job(queues['intake_query'], { "file_key": recording_file_key, "file_url": recording_file_url })
+    # job_data = await _job_intake_query(recording_file_key, recording_file_url)
     # --- respond
-    return json({ 'status': 'success', 'data': { 'file_url': answer_audio_file_url } })
+    return json({ 'status': 'success', 'data': { 'file_url': job.data['file_url'] } })
 
