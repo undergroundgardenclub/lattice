@@ -27,8 +27,8 @@ sudo apt full-upgrade
 
 virtual environment aka .venv (so we don't break root python libs. Need system site packages for camera lib issue https://github.com/raspberrypi/picamera2/issues/341#issuecomment-1268460969)
 ```
-python3 -m venv .venv --system-site-packages
-source .venv/bin/activate --system-site-packages
+python -m venv .venv --system-site-packages
+source .venv/bin/activate
 ```
 
 PIP Installs
@@ -83,3 +83,8 @@ Install binaries for use of pyaudio, then install pyaudio
 sudo apt-get install portaudio19-dev
 pip install pyaudio
 ```
+
+
+# Wifi
+
+FYI, need to set for multiple locations if moving between spaces: https://raspberrypi.stackexchange.com/questions/11631/how-to-setup-multiple-wifi-networks
