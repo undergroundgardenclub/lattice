@@ -1,15 +1,16 @@
 import json
+import numpy as np
 import yaml
 from typing import List
 from openai import OpenAI
-from guidance import models
 from env import env_open_ai_api_key
+from vision.cv import encoded_frame_to_base64
 
 
 openai_client = OpenAI(api_key=env_open_ai_api_key())
 
 def prompt_recording_transcript_to_task_headers(transcript) -> List[str]:
-    # query OpenAI
+    # query
     response = openai_client.chat.completions.create(
         model="gpt-4-1106-preview",
         response_format={ "type": "json_object" },
@@ -27,12 +28,12 @@ def prompt_recording_transcript_to_task_headers(transcript) -> List[str]:
     return headers
 
 def prompt_recording_transcript_to_task_outline(transcript: str, task_headers: List[str]):
-    # query OpenAI
+    # query
     response = openai_client.chat.completions.create(
         model="gpt-4-1106-preview",
         response_format={ "type": "json_object" },
         messages=[
-            { "role": "system", "content": "You are a helpful lab assistant designed to output JSON of a protocol with the schema, { protocolTasks: { taskName: str; taskActions: str[]; taskStartAtSecond?: int; taskEndAtSecond?: int; taskThoughts: str[] }[] }. Given an audio transcript as YML and task names as an array string, associate actions and observations mentioned in the transcript with each as an array of task objects. Example) { protocolTasks: [{ taskName: 'Gather Reagents', taskActions: ['Took competent cells out of -80C freezer', 'Took ampicilin out of -20C freezer.'], taskStartAtSecond: 0, taskEndAtSecond: 10, taskThoughts: [] }, { taskName: 'Heat Shock Plasmids into E.Coli', taskActions: ['Heat shocked cells at 42C in water bath'], taskStartAtSecond: 14, taskEndAtSecond: 80 taskThoughts: [] }, { taskName: 'Plate Cells', taskActions: ['Plate 100µl of cells on 2 AMP plates', 'Plated 200µl of cells on 2 AMP plates'], taskStartAtSecond: 80, taskEndAtSecond: 10, taskThoughts: ['Plates look weird, did we use the right agar?'] }, { taskName: 'Incubate Cells', taskActions: ['Placed all plates in incubator at 37C'], taskStartAtSecond: 120, taskEndAtSecond: null, taskThoughts: ['Incubator temperature gauge seemed finiky'] }] }" },
+            { "role": "system", "content": "You are a helpful lab assistant designed to output JSON annotating lab work/protocols with the schema, { protocolTasks: { taskName: str; taskSummary: str; taskActions: str[]; taskStartAtSecond?: int; taskEndAtSecond?: int; }[] }. Given an audio transcript as YML and task names as an array string, associate actions and observations mentioned in the transcript with each as an array of task objects." },
             # converting to YML because its considered fewer tokens
             { "role": "user", "content": f"Task Names: {task_headers}\n\nTranscript YML:\n\n{yaml.dump(transcript)}" }
         ],
@@ -44,3 +45,29 @@ def prompt_recording_transcript_to_task_outline(transcript: str, task_headers: L
     print(f"[prompt_recording_transcript_to_task_headers] num tasks: {len(tasks)}")
     # return
     return tasks
+
+def prompt_query(question_text: str, question_image_arr: np.ndarray):
+    print(f"[prompty_query] querying")
+    # encode image
+    base64_image = encoded_frame_to_base64(question_image_arr)
+    # query
+    response = openai_client.chat.completions.create(
+        # model="gpt-4-vision-preview",
+        model="gpt-4-1106-preview",
+        messages=[
+            { "role": "system", "content": "You are a helpful lab assistant answer questions, making observations, and being helpful to lab scientists. Your responses must be 2 to 3 sentences maximum. It is critical to be brief and to the point." },
+            {
+                "role": "user",
+                "content": [
+                    # { "type": "image_url", "image_url": { "url": f"data:image/jpeg;base64,{base64_image}" } }
+                    { "type": "text", "text": question_text },
+                ]
+            }
+        ],
+        temperature=0.2,
+    )
+    # parse response
+    response_text = response.choices[0].message.content
+    print(f"[prompty_query] response: {response_text}")
+    # return
+    return response_text
