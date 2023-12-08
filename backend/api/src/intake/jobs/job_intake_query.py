@@ -32,6 +32,7 @@ async def _job_intake_query(recording_file_key: str, recording_file_url: str):
     store_file_from_bytes(answer_audio_bytes, answer_audio_key)
     # --- return narration
     payload = { 'file_url': answer_audio_file_url }
+    print(f"[job_intake_query] payload: ", payload)
     return payload
 
 

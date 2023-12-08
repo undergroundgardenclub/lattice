@@ -52,19 +52,19 @@ def prompt_query(question_text: str, question_image_arr: np.ndarray):
     base64_image = encoded_frame_to_base64(question_image_arr)
     # query
     response = openai_client.chat.completions.create(
-        # model="gpt-4-vision-preview",
-        model="gpt-4-1106-preview",
+        model="gpt-4-vision-preview",
         messages=[
             { "role": "system", "content": "You are a helpful lab assistant answer questions, making observations, and being helpful to lab scientists. Your responses must be 2 to 3 sentences maximum. It is critical to be brief and to the point." },
             {
                 "role": "user",
                 "content": [
-                    # { "type": "image_url", "image_url": { "url": f"data:image/jpeg;base64,{base64_image}" } }
+                    { "type": "image_url", "image_url": { "url": f"data:image/jpeg;base64,{base64_image}" } },
                     { "type": "text", "text": question_text },
                 ]
             }
         ],
         temperature=0.2,
+        max_tokens=400,
     )
     # parse response
     response_text = response.choices[0].message.content
