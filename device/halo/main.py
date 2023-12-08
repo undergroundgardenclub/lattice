@@ -108,7 +108,7 @@ try:
             # ... reset
             button_press_count = 0
 
-        # --- run interaction
+        # --- run interaction (continues from state change above)
         if interaction_active == "press_single":
             interaction_press_single()
             interaction_active = None

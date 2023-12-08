@@ -13,6 +13,12 @@ RUN apt-get install \
   ffmpeg libavcodec-extra \
   -y
 
+# Cache Transformer/Language Models
+# --- transformers/torch (saving big pip installs as layers + using them to preload/cache models as layers. keep sync'd with requirements.txt)
+RUN pip install torch==2.1.1 transformers==4.35.2
+# --- transformers:CLIP (smaller model for comparing images/text quickly)
+RUN python -c 'from transformers import CLIPModel; CLIPModel.from_pretrained("openai/clip-vit-base-patch32")'
+
 # Install python packages for app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
