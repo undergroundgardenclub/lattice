@@ -2,14 +2,12 @@ import digitalio
 import multiprocessing
 import os
 import sys
-from env import env_device_id, env_directory_data, PIN_LED
+from env import env_device_id, env_directory_data
+from utils_device import led_main
 from utils_media import combine_h264_and_wav_into_mp4
 from utils_network import send_api_recording
 
 # SETUP
-# --- peripheral: LED for recording indicator
-led_recording = digitalio.DigitalInOut(PIN_LED)
-led_recording.direction = digitalio.Direction.OUTPUT
 # --- recording: audio
 def process_task_record_audio_fork(pe, media_path_audio_wav):
     import task_record_audio
@@ -36,7 +34,7 @@ def task_recording(process_events, media_id):
 
     # AWAIT
     # --- led indicator
-    led_recording.value = True
+    led_main.value = True
     # --- awaiting (aka blocking till resolves)
     process_task_record_audio.join()
     process_task_record_video.join()
@@ -51,7 +49,7 @@ def task_recording(process_events, media_id):
 
     # EXIT
     # --- led indicator
-    led_recording.value = False
+    led_main.value = False
     # --- process exit
     print('[process] task_record: exit')
     sys.exit(0)

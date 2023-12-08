@@ -2,7 +2,7 @@ from adafruit_debouncer import Debouncer
 import digitalio
 import multiprocessing
 import time
-from env import PIN_RECORD_BUTTON
+from utils_device import led_pattern, PIN_RECORD_BUTTON
 from utils_media import generate_media_id
 
 
@@ -41,6 +41,7 @@ def process_task_query_fork(pe, media_id):
 # --- single
 def interaction_press_single():
     print('[interaction_press_single] triggered')
+    led_pattern() # just for demoing/testing out. can't seem to trigger from other processes
 
 # --- double
 def interaction_press_double():
@@ -129,3 +130,4 @@ try:
         time.sleep(0.01)  # Small delay to debounce and reduce CPU usage
 except Exception as error:
     print("[loop] error: ", error)
+    led_pattern("error")

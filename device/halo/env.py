@@ -1,11 +1,5 @@
-import board
 import os
 from utils_device import get_device_identifier
-
-
-# PINS
-PIN_RECORD_BUTTON = board.D14
-PIN_LED = board.D23
 
 
 # VARS
