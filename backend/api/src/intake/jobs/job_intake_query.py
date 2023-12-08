@@ -40,5 +40,5 @@ async def job_intake_query(job, job_token):
     recording_file_key = job.data['file_key']
     recording_file_url = job.data['file_url']
     # --- strinigfy payload to transfer over the wire
-    payload = _job_intake_query(recording_file_key, recording_file_url)
+    payload = await _job_intake_query(recording_file_key, recording_file_url)
     return json.dumps(payload)
