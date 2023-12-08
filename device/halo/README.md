@@ -66,7 +66,17 @@ pip install RPI.GPIO
 
 # Wifi
 
-FYI, need to set for multiple locations if moving between spaces: https://raspberrypi.stackexchange.com/questions/11631/how-to-setup-multiple-wifi-networks
+The 'bookworm' Raspberry Pi OS has apparently drastically changed wifi configs to no longer use wpa_supplicant: https://www.jeffgeerling.com/blog/2023/nmcli-wifi-on-raspberry-pi-os-12-bookworm + https://forums.raspberrypi.com/viewtopic.php?t=357739#p2145139
+
+Code to add a new WiFi network:
+```
+sudo nmcli c add type wifi con-name <connection-name> ifname wlan0 ssid <yourssid>
+sudo nmcli c modify <connection-name> wifi-sec.key-mgmt wpa-psk wifi-sec.psk <wifipassword>
+```
+Connect:
+```
+sudo nmcli c up <connection-name>
+```
 
 
 # Env
