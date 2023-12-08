@@ -17,8 +17,9 @@ def send_api_recording(recording_file_path: str, recording_meta_dict: dict):
             response = requests.post(env_api_url() + "/v1/intake/recording", files=files, data=recording_meta_dict)
             # parse response JSON
             response_json = response.json()
+            print('[send_api_recording] response: ', response_json)
             # return
-            return response_json
+            return response_json['data']
     except Exception as err:
         print("[send_api_recording] error: ", err)
 
@@ -37,7 +38,8 @@ def send_api_query(recording_file_path: str, recording_meta_dict: dict):
             response = requests.post(env_api_url() + "/v1/intake/query", files=files, data=recording_meta_dict)
             # parse response JSON
             response_json = response.json()
+            print('[send_api_query] response: ', response_json)
             # return
-            return response_json
+            return response_json['data']
     except Exception as err:
         print("[send_api_query] error: ", err)

@@ -3,7 +3,7 @@ import digitalio
 import multiprocessing
 import time
 from env import PIN_RECORD_BUTTON
-from utils_media import generate_media_id 
+from utils_media import generate_media_id
 
 
 # SETUP

@@ -2,7 +2,7 @@ import io
 import requests
 
 def get_file_bytes(path_or_url: str):
-    print("[get_file_bytes] fetching file -> bytes (path/url: {path_or_url})")
+    print(f"[get_file_bytes] fetching file -> bytes (path/url: {path_or_url})")
     is_url = path_or_url.startswith("http")
     # ... fetch/download to bytes (aka we're in memory)
     if is_url == True:

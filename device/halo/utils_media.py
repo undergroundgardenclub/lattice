@@ -1,4 +1,4 @@
-import pygame
+from pygame import mixer
 import subprocess
 import time
 from env import env_device_id, env_recording_frame_rate, env_recording_sample_rate
@@ -28,9 +28,18 @@ def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_
 def generate_media_id():
     return f"{env_device_id()}-{int(time.time())}"
 
-def play_audio(audio_bytes):
-    print("[play_audio] playing audio!")
-    pygame.mixer.init()
-    pygame.mixer.music.load(audio_bytes)
-    # optionally, we can check if there is something already playing
-    pygame.mixer.music.play()
+def play_audio(audio_bytes, is_blocking=True):
+    print("[play_audio] playing")
+    mixer.init()
+    # --- create sound
+    sound = mixer.Sound(audio_bytes)
+    # --- create channel + play
+    channel = mixer.Channel(0) # must provide id. in the future may need to manage this if doing audio playback + notifications sounds
+    channel.set_volume(0.65)
+    channel.play(sound, loops=0)
+    # --- wait till done playing sound before returning (needed seomtimes bc a process exit stops sound)
+    if is_blocking:
+        print("[play_audio] busy/blocking")
+        while channel.get_busy():
+            continue
+    print("[play_audio] done")
