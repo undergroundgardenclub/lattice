@@ -2,10 +2,12 @@ import digitalio
 import multiprocessing
 import os
 import sys
+import time
 from env import env_device_id, env_directory_data
+from utils_files import delete_file
 from utils_device import led_main
 from utils_media import combine_h264_and_wav_into_mp4
-from utils_network import send_api_recording
+from utils_api import req_recording_submit
 
 
 # SETUP
@@ -42,13 +44,13 @@ def task_recording(process_events, media_id):
     # --- combing video/audio
     combine_h264_and_wav_into_mp4(media_path_video_h264, media_path_audio_wav, media_path_final_mp4)
     # --- send API file payload
-    send_api_recording(media_path_final_mp4, dict(device_id=env_device_id()))
+    req_recording_submit(media_path_final_mp4, dict(device_id=env_device_id()))
     # --- clean up src files
-    os.remove(media_path_video_h264)
-    os.remove(media_path_video_h264 + ".json")
-    os.remove(media_path_audio_wav)
-    os.remove(media_path_audio_wav + ".json")
-    # os.remove(media_path_final_mp4)
+    delete_file(media_path_video_h264)
+    delete_file(media_path_video_h264 + ".json")
+    delete_file(media_path_audio_wav)
+    delete_file(media_path_audio_wav + ".json")
+    # delete_file(media_path_final_mp4)
 
     # EXIT
     # --- led indicator

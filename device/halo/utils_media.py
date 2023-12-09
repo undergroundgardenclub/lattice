@@ -2,7 +2,7 @@ from pygame import mixer
 import subprocess
 import time
 from env import env_device_id, env_recording_frame_rate, env_recording_sample_rate
-from utils_data import read_file_json
+from utils_files import read_file_json
 
 
 # FFMPEG

@@ -20,12 +20,19 @@ def get_file_bytes(path_or_url: str):
         except IOError as e:
             raise Exception(f"Failed to load audio from path '{path_or_url}': {e}")
 
+def delete_file(file_path: str):
+    try:
+        print("[delete_file] deleting: ", file_path)
+        os.remove(file_path)
+    except IOError as e:
+        print(f"[delete_file] failed deleting ", file_path)
+
 def write_file_json(file_path, data):
-    print('[write_data] json -> ', file_path)
-    with open(file_path, 'w') as json_file:
+    print("[write_data] json -> ", file_path)
+    with open(file_path, "w") as json_file:
         json.dump(data, json_file, indent=4)
 
 def read_file_json(file_path):
-    with open(file_path, 'r') as json_file:
+    with open(file_path, "r") as json_file:
         data = json.load(json_file)
         return data

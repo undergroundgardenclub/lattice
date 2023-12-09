@@ -4,10 +4,10 @@ import os
 import pygame
 import sys
 from env import env_device_id, env_directory_data
-from utils_data import get_file_bytes
+from utils_api import req_query
+from utils_files import get_file_bytes
 from utils_device import led_main
 from utils_media import combine_h264_and_wav_into_mp4, play_audio
-from utils_network import send_api_query
 
 # SETUP
 # --- recording: audio
@@ -43,7 +43,7 @@ def task_query(process_events, media_id):
     # --- combing video/audio
     combine_h264_and_wav_into_mp4(media_path_video_h264, media_path_audio_wav, media_path_final_mp4)
     # --- send API file payload
-    query_response_data = send_api_query(media_path_final_mp4, dict(device_id=env_device_id()))
+    query_response_data = req_query(media_path_final_mp4, dict(device_id=env_device_id()))
     # --- clean up src files
     os.remove(media_path_video_h264)
     os.remove(media_path_video_h264 + ".json")
