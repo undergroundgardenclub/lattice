@@ -21,13 +21,13 @@ async def app_route_intake_recording(request):
     print("[app_route_intake_recording] responding")
     return json({ 'status': 'success' })
 
-# # added GET for ease of trigger/testing
-# @blueprint_intake.route('/recording', methods=['GET'])
-# async def app_route_intake_recording_test(request):
-#     recording_file_key = "ee81aede-315c-41c3-95f9-cb6b421d6198.mp4"
-#     recording_file_url = get_stored_file_url(recording_file_key)
-#     await queue_add_job(queues['intake_recording'], { "file_key": recording_file_key, "file_url": recording_file_url })
-#     return json({ 'status': 'success' })
+# added GET for ease of trigger/testing
+@blueprint_intake.route('/recording', methods=['GET'])
+async def app_route_intake_recording_test(request):
+    recording_file_key = "03f97535-8d59-401f-b57d-3c54ea80030f.mp4"
+    recording_file_url = get_stored_file_url(recording_file_key)
+    await queue_add_job(queues['intake_recording'], { "file_key": recording_file_key, "file_url": recording_file_url })
+    return json({ 'status': 'success' })
 
 # --- TODO: sessions (aka chunked recordings part of a longer session, means i think we need a start/stop w/ server)
 
