@@ -7,6 +7,7 @@ from typing import Optional
 PIN_RECORD_BUTTON = board.D14
 PIN_LED = board.D23
 
+
 # IDs
 def get_device_identifier():
   """
@@ -23,7 +24,8 @@ def get_device_identifier():
     cpuserial = "ERROR000000000" 
   return cpuserial
   
-# Peripherals
+
+# PERIPHERALS
 led_main = digitalio.DigitalInOut(PIN_LED)
 led_main.direction = digitalio.Direction.OUTPUT
 

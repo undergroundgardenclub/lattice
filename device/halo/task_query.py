@@ -46,7 +46,9 @@ def task_query(process_events, media_id):
     query_response_data = send_api_query(media_path_final_mp4, dict(device_id=env_device_id()))
     # --- clean up src files
     os.remove(media_path_video_h264)
+    os.remove(media_path_video_h264 + ".json")
     os.remove(media_path_audio_wav)
+    os.remove(media_path_audio_wav + ".json")
     os.remove(media_path_final_mp4)
 
     # PLAY AUDIO

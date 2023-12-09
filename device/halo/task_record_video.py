@@ -3,6 +3,8 @@ from picamera2.encoders import H264Encoder, Quality
 import sys
 import time
 from env import env_recording_frame_rate
+from utils_data import write_file_json
+
 
 # SETUP
 # --- peripheral: Camera/Video (https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf)
@@ -15,6 +17,8 @@ video_size = (1280, 720) # (1600, 900) seems great, (1920, 1080) is big if recor
 # LOOP
 def task_record_video(process_events, media_path_video_h264):
     print('[process] task_record_video: fork')
+    start_time_ns = None
+
     # START
     with Picamera2() as picam2:
         picam2_config = picam2.create_video_configuration({ 'size': video_size }, controls={
@@ -22,16 +26,20 @@ def task_record_video(process_events, media_path_video_h264):
             "FrameDurationLimits": (video_frame_duration_limit, video_frame_duration_limit)
         })
         picam2.configure(picam2_config)
-        # recording kicks off at paths provided by caller (that way post-recording, files can be modified and later removed)
+        # recording kicks off at path provided (post-recording, files can be modified/merged/removed)
         picam2.start_recording(video_encoder, output=media_path_video_h264, quality=Quality.MEDIUM)
         while process_events['event_stop_recording'].is_set() == False:
-            continue # noop, i tried doing a sleep command to reduce CPU load but it messed with timing i think
+            # --- on first frame, save metadata
+            if start_time_ns == None:
+                start_time_ns = time.time_ns()
+            # --- otherwise, noop, i tried doing a sleep command to reduce CPU load but it messed with timing i think
+            continue
 
     # EXIT
     # --- stop recording to save file
     picam2.stop_recording()
-    # --- convert (MOVED UP. we're going to use ffmpeg when we have audio+video so avoid duplicating mp4s)
-    # convert_h264_to_mp4(media_path_video_h264, media_path_video_mp4, video_frame_rate)
+    # --- save metadata
+    write_file_json(media_path_video_h264 + '.json', { 'start_time_ns': start_time_ns })
     # --- exit
     print('[process] task_record_video: exit')
     sys.exit(0)

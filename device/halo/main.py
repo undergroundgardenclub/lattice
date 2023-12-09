@@ -54,7 +54,7 @@ def interaction_press_double():
         process_task_recording.start()
     else:
         process_events['event_stop_recording'].set() # trigger stop event
-        process_task_recording.join() # wait for process to resolve
+        process_task_recording.join() # TODO: instead of join() we need to iteratively check up on this so we don't block other interactions
         process_events['event_stop_recording'].clear() # clear process reference. and "unset" which we are using for control flow (maybe start should be this way too rather than None)
         process_task_recording = None
 
@@ -69,7 +69,7 @@ def interaction_press_long(is_button_pressed):
         process_task_query.start()
     else:
         process_events['event_stop_recording'].set()
-        process_task_query.join()
+        process_task_query.join()  # TODO: instead of join() we need to iteratively check up on this so we don't block other interactions
         process_events['event_stop_recording'].clear()
         process_task_query = None
 
@@ -126,6 +126,8 @@ try:
             interaction_press_long(is_button_pressed)
             interaction_active = None
 
+
+        # TODO: should we do some clean up of processes/event flags? using is_alive()?
 
         time.sleep(0.01)  # Small delay to debounce and reduce CPU usage
 except Exception as error:

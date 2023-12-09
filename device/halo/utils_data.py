@@ -1,4 +1,5 @@
 import io
+import json
 import requests
 
 def get_file_bytes(path_or_url: str):
@@ -18,3 +19,13 @@ def get_file_bytes(path_or_url: str):
                 return io.BytesIO(file.read())
         except IOError as e:
             raise Exception(f"Failed to load audio from path '{path_or_url}': {e}")
+
+def write_file_json(file_path, data):
+    print('[write_data] json -> ', file_path)
+    with open(file_path, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
+
+def read_file_json(file_path):
+    with open(file_path, 'r') as json_file:
+        data = json.load(json_file)
+        return data

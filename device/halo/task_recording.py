@@ -7,6 +7,7 @@ from utils_device import led_main
 from utils_media import combine_h264_and_wav_into_mp4
 from utils_network import send_api_recording
 
+
 # SETUP
 # --- recording: audio
 def process_task_record_audio_fork(pe, media_path_audio_wav):
@@ -44,8 +45,10 @@ def task_recording(process_events, media_id):
     send_api_recording(media_path_final_mp4, dict(device_id=env_device_id()))
     # --- clean up src files
     os.remove(media_path_video_h264)
+    os.remove(media_path_video_h264 + ".json")
     os.remove(media_path_audio_wav)
-    os.remove(media_path_final_mp4)
+    os.remove(media_path_audio_wav + ".json")
+    # os.remove(media_path_final_mp4)
 
     # EXIT
     # --- led indicator
