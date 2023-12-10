@@ -38,7 +38,9 @@ async def close_session(request, response):
 @api_app.route('/health', methods=['GET'])
 def app_route_health(_):
     return json({ 'status': 'success' })
-# --- intake (streams/recordings)
+# --- device (messages queue)
+api_app.blueprint(blueprint_devices)
+# --- intake (streams/recordings/queries)
 api_app.blueprint(blueprint_intake)
 
 
