@@ -8,15 +8,15 @@ from voice.text_to_speech import text_to_speech
 from vision.cv import video_frame_at_second
 
 
-async def _job_intake_query(recording_file_key: str, recording_file_url: str):
+async def _job_intake_query(file: dict, text: str = None):
     """
     Take a MP4 file, analzye it to answer a question, generate speech audio, send that back
     """
     # --- transcribe for question text
-    transcript = speech_to_text(recording_file_url)
+    transcript = speech_to_text(file.get("file_url"), file.get("transcript_id"))
     print(f"[job_intake_query]", transcript['text'])
     # --- get frame (going to grab 2 seconds in for simplicity)
-    video_file_bytes = get_stored_file_bytes(recording_file_key)
+    video_file_bytes = get_stored_file_bytes(file.get("file_key"))
     tmp_file_path = tmp_file_set(video_file_bytes)
     try:
         encoded_frame_jpg = video_frame_at_second(tmp_file_path, 1)
@@ -38,8 +38,8 @@ async def _job_intake_query(recording_file_key: str, recording_file_url: str):
 
 async def job_intake_query(job, job_token):
     # --- get params
-    recording_file_key = job.data['file_key']
-    recording_file_url = job.data['file_url']
+    file = job.data.get("file")
+    text = job.data.get("text")
     # --- strinigfy payload to transfer over the wire
-    payload = await _job_intake_query(recording_file_key, recording_file_url)
+    payload = await _job_intake_query(file, text)
     return json.dumps(payload)
