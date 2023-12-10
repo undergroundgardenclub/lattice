@@ -9,7 +9,7 @@ from vision.cv import encoded_frame_to_base64
 
 openai_client = OpenAI(api_key=env_open_ai_api_key())
 
-def prompt_recording_transcript_to_task_headers(transcript) -> List[str]:
+def prompt_recording_transcript_to_task_headers(transcript: str) -> List[str]:
     # query
     response = openai_client.chat.completions.create(
         model="gpt-4-1106-preview",
@@ -42,6 +42,7 @@ def prompt_recording_transcript_to_task_outline(transcript: str, task_headers: L
     # parse response
     data = json.loads(response.choices[0].message.content)
     tasks = data['protocolTasks']
+    print(f"[prompt_recording_transcript_to_task_headers] tasks: ", tasks)
     print(f"[prompt_recording_transcript_to_task_headers] num tasks: {len(tasks)}")
     # return
     return tasks

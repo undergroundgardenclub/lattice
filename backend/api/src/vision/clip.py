@@ -10,6 +10,7 @@ processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
 # ENCODINGS
 def clip_encode(images: List, text: List):
+    print(f"[clip_encode] {len(images)} images, {len(text)} text")
     # process
     with torch.no_grad():
         # --- images
@@ -28,6 +29,7 @@ def clip_encode(images: List, text: List):
 
 # CALCS
 def clip_similarity(features_list, feature_compared):
+    print(f"[clip_similarity] {len(features_list)} features")
     # Ensure feature_compared is two-dimensional for matrix multiplication
     feature_compared = feature_compared.unsqueeze(0) if feature_compared.dim() == 1 else feature_compared
     # Normalize the features

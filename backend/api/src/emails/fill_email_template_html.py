@@ -6,6 +6,7 @@ from vision.cv import encoded_frame_to_base64
 
 
 def fill_email_template_html_tasks_summary(tasks: List[dict]) -> (str, List):
+    print(f"[fill_email_template_html_tasks_summary] {len(tasks)} tasks to HTML")
     # SETUP
     # --- open
     email_html = "<html><body>"
@@ -13,25 +14,20 @@ def fill_email_template_html_tasks_summary(tasks: List[dict]) -> (str, List):
     # email_files = []
 
     for task in tasks:
-        has_summary = task['taskSummary']
-        # has_observation = task['taskObservation'] != None
-        has_actions = len(task['taskActions']) > 0
         # --- header
-        email_html += f"<h4><u>TASK: {task['taskName']}</u></h4>"
-        # --- thoughts paragraph
-        email_html += f"<p>{task['taskSummary']}"
-        # # --- observation (TODO: trying to make this an AI reflective statement as 3rd party)
-        # email_html += f" {task['taskObservation']}"
+        email_html += f"<h4><u>TASK: {task.get('taskName')}</u></h4>"
+        email_html += f"<p>{task.get('taskSummary')}"
+        # --- observation (TODO: trying to make this an AI reflective statement as 3rd party)
         # --- actions bullet list
-        if has_actions:
+        if len(task.get("taskActions", [])) > 0:
             email_html += " Actions: </p><ul>"
-            for action in task['taskActions']:
+            for action in task.get('taskActions'):
                 email_html += f"<li>{action}</li>"
             email_html += "</ul>"
-        # --- image
-        if task['image'] is not None:
-            # attachment image data and cid reference
-            image_base64_encoded = encoded_frame_to_base64(task['image'])
+        # --- image (could do attachments + cid reference, or base64 inline)
+        if task.get("image") is not None:
+            image_base64_encoded = encoded_frame_to_base64(task.get("image"))
+            email_html += f"<img src='data:image/jpeg;base64,{image_base64_encoded}' />"
             # CID METHOD DOES NOT WORK, DOING BASE64 ENCODING INLINE
             # email_files.append({
             #     'filename': f"{snake_case(task['taskName'])}.jpg",
@@ -40,7 +36,7 @@ def fill_email_template_html_tasks_summary(tasks: List[dict]) -> (str, List):
             #     'content': image_base64_encoded
             # })
             # email_html += f"<img src='cid:{snake_case(task['taskName'])}' />"
-            email_html += f"<img src='data:image/jpeg;base64,{image_base64_encoded}' />"
+
 
         # --- gap
         email_html += "<br/>"

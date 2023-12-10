@@ -29,7 +29,16 @@ async def app_route_intake_recording_test(request):
     await queue_add_job(queues['intake_recording'], { "file_key": recording_file_key, "file_url": recording_file_url })
     return json({ 'status': 'success' })
 
-# --- TODO: sessions (aka chunked recordings part of a longer session, means i think we need a start/stop w/ server)
+
+# --- recording batch (multiple shorter videos)
+@blueprint_intake.route('/recording/batch', methods=['POST'])
+async def app_route_intake_recording_batch(request):
+    # --- skip file to S3, because device has done it already and is sending us keys/urls
+    # --- start job
+    await queue_add_job(queues['intake_recording_batch'], { "files": request.json.get('files') })
+    # --- respond
+    return json({ 'status': 'success' })
+
 
 # --- queries
 @blueprint_intake.route('/query', methods=['POST'])
