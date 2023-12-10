@@ -26,8 +26,8 @@ def task_recording(process_events, media_id):
     print('[process] task_record: fork')
     # START
     # --- prep processors
-    media_path_video_h264 = f"{env_directory_data()}/{media_id}.h264"
     media_path_audio_wav = f"{env_directory_data()}/{media_id}.wav"
+    media_path_video_h264 = f"{env_directory_data()}/{media_id}.h264"
     media_path_final_mp4 = f"{env_directory_data()}/{media_id}.mp4"
     process_task_record_audio = multiprocessing.Process(target=process_task_record_audio_fork, args=(process_events, media_path_audio_wav))
     process_task_record_video = multiprocessing.Process(target=process_task_record_video_fork, args=(process_events, media_path_video_h264))

@@ -7,9 +7,8 @@ from utils_files import read_file_json
 
 # FFMPEG
 # --- mapping/helpers
-def calculate_offset(first_audio_timestamp_ns, first_video_timestamp_ns):
-    offset = (first_video_timestamp_ns - first_audio_timestamp_ns) / 1e9
-    print('[calculate_offset] offset = ', offset)
+def calculate_offset_seconds(first_ns, second_ns):
+    offset = (second_ns - first_ns) / 1e9
     return offset
 
 # --- converters
@@ -19,7 +18,7 @@ def convert_h264_to_mp4(input_file: str, output_file: str, frame_rate: int):
 
 def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_path):
     # --- calc offset since multiprocess
-    offset = calculate_offset(
+    offset = calculate_offset_seconds(
         read_file_json(video_file_path + '.json')['start_time_ns'],
         read_file_json(audio_file_path + '.json')['start_time_ns'],
     )
@@ -28,7 +27,7 @@ def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_
         "ffmpeg",
         "-r", str(env_recording_frame_rate()), # video capture frame rate
         "-i", video_file_path,
-        '-itsoffset', str(offset), # offsetting audio by 1 second to line up w/ video. looks good!
+        '-itsoffset', str(offset), # offsetting is scuffed
         "-i", audio_file_path,
         "-c:v", "copy", # copy the video stream
         "-channel_layout", "mono",

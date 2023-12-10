@@ -13,7 +13,7 @@ button_input = digitalio.DigitalInOut(PIN_RECORD_BUTTON)
 button_input.switch_to_input(pull=digitalio.Pull.UP) # if button pressed, button.fell = True
 button = Debouncer(button_input)
 # --- interaction trackers/globals
-BUTTON_PRESS_TIMER = 1.0 # seconds
+BUTTON_PRESS_WINDOW_TIMER = 1.0 # seconds
 button_press_count = 0
 button_press_last_at = 0
 button_press_last_state = False
@@ -53,17 +53,17 @@ def interaction_press_single():
 # --- double
 def interaction_press_double():
     print('[interaction_press_double] triggered')
-    global process_task_recording # means we can reach outside our functions scope
-    print(f'[interaction_press_double] recording: {"started" if process_task_recording == None else "stopping"}')
-    if process_task_recording == None: # start process if one doesn't exist
+    global process_task_recording_batch # means we can reach outside our functions scope
+    print(f'[interaction_press_double] recording: {"started" if process_task_recording_batch == None else "stopping"}')
+    if process_task_recording_batch == None: # start process if one doesn't exist
         media_id = generate_media_id()
-        process_task_recording = multiprocessing.Process(target=process_task_recording_fork, args=(process_events, media_id))
-        process_task_recording.start()
+        process_task_recording_batch = multiprocessing.Process(target=process_task_recording_batch_fork, args=(process_events, media_id))
+        process_task_recording_batch.start()
     else:
-        process_events['event_stop_recording'].set() # trigger stop event
-        process_task_recording.join() # TODO: instead of join() we need to iteratively check up on this so we don't block other interactions
-        process_events['event_stop_recording'].clear() # clear process reference. and "unset" which we are using for control flow (maybe start should be this way too rather than None)
-        process_task_recording = None
+        process_events['event_recording_stop'].set() # trigger stop event
+        process_task_recording_batch.join() # TODO: instead of join() we need to iteratively check up on this so we don't block other interactions
+        process_events['event_recording_stop'].clear() # clear process reference. and "unset" which we are using for control flow (maybe start should be this way too rather than None)
+        process_task_recording_batch = None
 
 # --- long press
 def interaction_press_long(is_button_pressed):
@@ -75,9 +75,9 @@ def interaction_press_long(is_button_pressed):
         process_task_query = multiprocessing.Process(target=process_task_query_fork, args=(process_events, media_id))
         process_task_query.start()
     else:
-        process_events['event_stop_recording'].set()
+        process_events['event_recording_stop'].set()
         process_task_query.join()  # TODO: instead of join() we need to iteratively check up on this so we don't block other interactions
-        process_events['event_stop_recording'].clear()
+        process_events['event_recording_stop'].clear()
         process_task_query = None
 
 
@@ -103,7 +103,7 @@ try:
             button_press_last_state = False
 
         # --- if we're 1 second past, initial click, determine which interaction we're having
-        if now - button_press_last_at >= BUTTON_PRESS_TIMER:
+        if now - button_press_last_at >= BUTTON_PRESS_WINDOW_TIMER:
             # ... if still held down, we're long
             if button_press_count == 1 and is_button_pressed:
                 interaction_active = "press_long_start"
