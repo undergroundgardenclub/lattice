@@ -2,15 +2,11 @@ from pygame import mixer
 import subprocess
 import time
 from env import env_device_id, env_directory_data, env_recording_frame_rate, env_recording_sample_rate
+from utils_device import calculate_offset_seconds
 from utils_files import read_file_json
 
 
 # FFMPEG
-# --- mapping/helpers
-def calculate_offset_seconds(first_ns, second_ns):
-    offset = (second_ns - first_ns) / 1e9
-    return offset
-
 # --- converters
 def convert_h264_to_mp4(input_file: str, output_file: str, frame_rate: int):
     command = ["ffmpeg", "-r", str(frame_rate), "-i", input_file, "-c:v", "copy", "-c:a", "copy", output_file]
@@ -19,8 +15,8 @@ def convert_h264_to_mp4(input_file: str, output_file: str, frame_rate: int):
 def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_path):
     # --- calc offset since multiprocess
     offset = calculate_offset_seconds(
-        read_file_json(video_file_path + '.json')['start_time_ns'],
-        read_file_json(audio_file_path + '.json')['start_time_ns'],
+        read_file_json(video_file_path + '.json')['start_time_sec'],
+        read_file_json(audio_file_path + '.json')['start_time_sec'],
     )
     # --- setup command
     command = [

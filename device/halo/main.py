@@ -108,7 +108,7 @@ try:
             button_press_last_state = False
 
         # --- if we're 1 second past, initial click, determine which interaction we're having
-        if now - button_press_last_at >= BUTTON_PRESS_WINDOW_TIMER:
+        if now - button_press_last_at >= BUTTON_PRESS_WINDOW_TIME_SECS:
             # ... if still held down, we're long
             if button_press_count == 1 and is_button_pressed:
                 interaction_active = "press_long_start"

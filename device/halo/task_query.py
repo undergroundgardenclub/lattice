@@ -1,4 +1,3 @@
-import digitalio
 import multiprocessing
 import os
 import pygame
@@ -56,12 +55,7 @@ def task_query(process_events, media_id):
     # --- send API req
     query_response_data = req_query(query_file=dict(file_key=media_mp4_key, file_url=get_stored_file_url(media_mp4_key)))
 
-    # PLAY AUDIO
-    # --- fetch audio (don't save to disk, keep in memory for simplicity, these are short and compress mp3s)
-    audio_narration_file_url = query_response_data['file_url']
-    audio_narration_response_bytes = get_file_bytes(audio_narration_file_url)
-    # --- play
-    play_audio(audio_narration_response_bytes)
+    # PLAY AUDIO (DEPRECATED: to prevent blocking while server-side processing, now using device message queue)
 
     # EXIT
     # --- led indicator

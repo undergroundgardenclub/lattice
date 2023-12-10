@@ -47,3 +47,11 @@ def led_pattern(pattern_type: str = None):
         time.sleep(delay_blinks)
     # --- return to prior state
     led_main.value = current_led_state
+
+
+# TIMERS
+def calculate_offset_seconds(earlier_sec, later_sec_at):
+    # TODO: make this absolute? rather than relative
+    offset = later_sec_at - earlier_sec
+    print(f"[calculate_offset_seconds] {later_sec_at} - {earlier_sec} = {offset}")
+    return offset

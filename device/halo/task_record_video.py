@@ -17,7 +17,7 @@ video_size = (1280, 720) # (1600, 900) seems great, (1920, 1080) is big if recor
 # LOOP
 def task_record_video(process_events, media_path_video_h264):
     print('[process] task_record_video: fork')
-    start_time_ns = None
+    start_time_sec = None
 
     # START
     # dealing with some choppy video cap at times, so may need to consider other paths: https://forums.raspberrypi.com/viewtopic.php?t=245875#p1673963
@@ -30,8 +30,8 @@ def task_record_video(process_events, media_path_video_h264):
         picam2.start_recording(video_encoder, output=media_path_video_h264, quality=Quality.LOW)
         while process_events['event_recording_stop'].is_set() == False and process_events['event_recording_video_stop'].is_set() == False:
             # --- on first frame, save metadata
-            if start_time_ns == None:
-                start_time_ns = time.time_ns()
+            if start_time_sec == None:
+                start_time_sec = time.monotonic()
             # --- otherwise, noop, i tried doing a sleep command to reduce CPU load but it messed with timing i think
             continue
 
@@ -39,7 +39,7 @@ def task_record_video(process_events, media_path_video_h264):
     # --- stop recording to save file
     picam2.stop_recording()
     # --- save metadata
-    write_file_json(media_path_video_h264 + '.json', { 'start_time_ns': start_time_ns })
+    write_file_json(media_path_video_h264 + '.json', { 'start_time_sec': start_time_sec })
     # --- exit
     print('[process] task_record_video: exit')
     sys.exit(0)

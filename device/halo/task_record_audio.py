@@ -18,7 +18,7 @@ audio_chunk = 1024
 # LOOP
 def task_record_audio(process_events, media_path_audio_wav):
     print('[process] task_record_audio: fork')
-    start_time_ns = None
+    start_time_sec = None
 
     # START
     # --- init audio
@@ -28,8 +28,8 @@ def task_record_audio(process_events, media_path_audio_wav):
     frames = []
     while process_events['event_recording_stop'].is_set() == False and process_events['event_recording_audio_stop'].is_set() == False:
         # --- on first frame, save metadata
-        if start_time_ns == None:
-            start_time_ns = time.time_ns()
+        if start_time_sec == None:
+            start_time_sec = time.monotonic()
         # --- push data
         data = stream.read(audio_chunk)
         frames.append(data)
@@ -46,7 +46,7 @@ def task_record_audio(process_events, media_path_audio_wav):
         wf.setframerate(audio_sample_rate)
         wf.writeframes(b''.join(frames))
     # --- save meta data file
-    write_file_json(media_path_audio_wav + '.json', { 'start_time_ns': start_time_ns })
+    write_file_json(media_path_audio_wav + '.json', { 'start_time_sec': start_time_sec })
     # --- exit
     print('[process] task_record_audio: exit')
     sys.exit(0)

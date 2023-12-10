@@ -1,4 +1,3 @@
-import digitalio
 import multiprocessing
 import os
 import sys
@@ -37,11 +36,11 @@ def task_recording_series(process_events, media_id):
     # RECORD
     chunk_count = 0
     chunk_duration_sec = 60 * 2 # random dropped frames throw video/audio out of sync. so keeping it short but there's a missing recording gap between segments
-    chunk_start_ns = None # reset when each chunk is done?
+    chunk_start_sec = None # reset when each chunk is done?
 
     while process_events['event_recording_stop'].is_set() == False:
         chunk_count += 1
-        chunk_start_ns = time.time_ns()
+        chunk_start_sec = time.monotonic()
         # --- recording chunk: setup (TODO: should processing starts be done only once? and have video/audio processes responbile for chunking? that saves time for allocating processors)
         media_path_audio_wav = get_media_local_file_path(media_id, "wav", chunk_count)
         media_path_video_h264 = get_media_local_file_path(media_id, "h264", chunk_count)
@@ -54,7 +53,7 @@ def task_recording_series(process_events, media_id):
         print('recording chunk: started')
 
         # --- block/sync until either event to stop or past chunk duration/length
-        while process_events['event_recording_stop'].is_set() == False and calculate_offset_seconds(chunk_start_ns, time.time_ns()) < chunk_duration_sec:
+        while process_events['event_recording_stop'].is_set() == False and calculate_offset_seconds(chunk_start_sec, time.monotonic()) < chunk_duration_sec:
             time.sleep(0.1) # easier on the CPU usage?
         
         # --- recording chunk: trigger video/audio end and wait for process to exit (may be duplicative, but harmless)
