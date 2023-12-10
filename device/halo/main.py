@@ -65,6 +65,11 @@ def interaction_press_double():
         process_events['event_recording_stop'].clear() # clear process reference. and "unset" which we are using for control flow (maybe start should be this way too rather than None)
         process_task_recording_batch = None
 
+# --- triple
+def interaction_press_triple():
+    print('[interaction_press_triple] triggered')
+    led_pattern("error")
+
 # --- long press
 def interaction_press_long(is_button_pressed):
     print('[interaction_press_long] triggered', is_button_pressed)
@@ -113,6 +118,8 @@ try:
             # ... if two presses and not held down, we're double
             elif button_press_count == 2:
                 interaction_active = "press_double"
+            elif button_press_count == 3:
+                interaction_active = "press_triple"
             # ... reset
             button_press_count = 0
 
@@ -123,6 +130,10 @@ try:
 
         elif interaction_active == "press_double":
             interaction_press_double()
+            interaction_active = None
+
+        elif interaction_active == "press_triple":
+            interaction_press_triple()
             interaction_active = None
 
         elif interaction_active == "press_long_start" and is_button_pressed:

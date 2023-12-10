@@ -40,7 +40,7 @@ def task_recording_batch(process_events, media_id):
 
     # RECORD
     chunk_count = 0
-    chunk_duration_sec = 60 * 2 # 2 min chunks? 5 min chunks? sync issues may mean smaller = better?
+    chunk_duration_sec = 60 * 2 # random dropped frames throw video/audio out of sync. so keeping it short but there's a missing recording gap between segments
     chunk_start_ns = None # reset when each chunk is done?
 
     while process_events['event_recording_stop'].is_set() == False:
