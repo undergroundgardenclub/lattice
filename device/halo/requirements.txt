@@ -1,9 +1,11 @@
 adafruit-blinka
 adafruit-circuitpython-debouncer
 adafruit-python-shell
+boto3==1.24.89
 numpy
 picamera2
 pyaudio
 pygame
+python-dotenv
 requests
 RPI.GPIO

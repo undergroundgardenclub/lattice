@@ -1,12 +1,10 @@
+import json
 import requests
 from env import env_api_url
 
 
 # RECORDINGS
 def req_recording_submit(recording_file_path: str, recording_meta_dict: dict):
-    """
-    Send API a long recording that turns into an outline/email
-    """
     print("[req_recording_submit] sending recording")
     try:
         # Open file
@@ -23,15 +21,19 @@ def req_recording_submit(recording_file_path: str, recording_meta_dict: dict):
     except Exception as err:
         print("[req_recording_submit] error: ", err)
 
-def req_recording_submit_session_start(device_id, session_id):
-    print("[req_recording_submit] sending recording")
+def req_recording_batch_submit(files):
+    print("[req_recording_batch_submit] sending recording")
+    # post w/ files array of already uploaded files (using json.dumps to convert python dicts to JSON friendly objs?)
+    response = requests.post(env_api_url() + "/v1/intake/recording/batch", data=json.dumps({ 'files': files }))
+    # parse response JSON
+    response_json = response.json()
+    print('[req_recording_batch_submit] response: ', response_json)
+    # return (no payload expected)
+    return
 
 
 # QUERY
 def req_query(recording_file_path: str, recording_meta_dict: dict):
-    """
-    Send API a recording that queries LLMs, and returns an audio clip response to play to user
-    """
     print("[req_query] sending recording")
     try:
         # Open file
