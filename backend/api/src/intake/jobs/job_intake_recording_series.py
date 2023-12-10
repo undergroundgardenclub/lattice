@@ -140,7 +140,7 @@ async def _job_intake_recording_series(files: List[dict]):
 
 async def job_intake_recording_series(job, job_token):
     # --- get params
-    files = job.data['files']
+    files = job.data.get("files")
     # --- strinigfy payload to transfer over the wire
     payload = await _job_intake_recording_series(files)
     return json.dumps(payload)

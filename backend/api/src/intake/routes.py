@@ -14,7 +14,10 @@ blueprint_intake = Blueprint("intake", url_prefix="v1/intake")
 @blueprint_intake.route('/recording/series', methods=['POST'])
 async def app_route_intake_recording_series(request):
     # --- start job (skip file to S3, because device has done it already and is sending us keys/urls)
-    await queue_add_job(queues['intake_recording_series'], { "files": request.json.get('files') })
+    await queue_add_job(queues['intake_recording_series'], {
+        "device_id": request.json.get('device_id'),
+        "files": request.json.get('files'),
+    })
     # --- respond
     return json({ 'status': 'success' })
 
@@ -33,13 +36,13 @@ async def app_route_intake_recording_series(request):
 # --- queries
 @blueprint_intake.route('/query', methods=['POST'])
 async def app_route_intake_query(request):
-    # --- save file to S3 and database. needed for API calls later
-    recording_file_key, recording_file_url = intake_file_preprocessing(request.files.get('file'), "mp4")
-    # --- start job
-    # job = await queue_add_job(queues['intake_query'], { "file_key": recording_file_key, "file_url": recording_file_url })
+    # # --- start job
+    # job = await queue_add_job(queues['intake_query'], {
+    #     "file": request.json.get("file"),
+    #     "text": request.json.get("text"),
+    # })
     # job_data = job.data
-    job_data = await _job_intake_query(recording_file_key, recording_file_url)
-    # --- respond
-    print("[app_route_intake_query] responding")
-    return json({ 'status': 'success', 'data': { 'file_url': job_data['file_url'] } })
+    job_data = await _job_intake_query(request.json.get('file'), request.json.get('text'))
+    # --- respond (w/ audio narration response)
+    return json({ 'status': 'success', 'data': { 'file_url': job_data.get("file_url") } })
 
