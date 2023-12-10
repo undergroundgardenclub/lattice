@@ -5,7 +5,7 @@ import sys
 import time
 from uuid import uuid4
 from env import env_device_id, env_directory_data
-from utils_api import req_recording_batch_submit
+from utils_api import req_recording_series_submit
 from utils_device import led_main
 from utils_files import delete_file, store_file_from_path, get_stored_file_url
 from utils_media import calculate_offset_seconds, combine_h264_and_wav_into_mp4, get_media_local_file_path, get_media_key
@@ -102,7 +102,7 @@ def task_recording_series(process_events, media_id):
 
     # --- send a req to backend for processing and creating an outline?
     print('recording chunk: sending api files list')
-    req_recording_batch_submit(recording_files)
+    req_recording_series_submit(recording_files)
     
 
     # EXIT

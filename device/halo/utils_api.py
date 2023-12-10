@@ -22,13 +22,13 @@ def req_recording_submit(recording_file_path: str, recording_meta_dict: dict):
     except Exception as err:
         print("[req_recording_submit] error: ", err)
 
-def req_recording_batch_submit(files: List[dict]):
-    print("[req_recording_batch_submit] sending recording")
+def req_recording_series_submit(files: List[dict]):
+    print("[req_recording_series_submit] sending recording")
     # post w/ files array of already uploaded files (using json.dumps to convert python dicts to JSON friendly objs?)
-    response = requests.post(env_api_url() + "/v1/intake/recording/batch", data=json.dumps({ 'files': files }))
+    response = requests.post(env_api_url() + "/v1/intake/recording/series", data=json.dumps({ 'files': files }))
     # parse response JSON
     response_json = response.json()
-    print('[req_recording_batch_submit] response: ', response_json)
+    print('[req_recording_series_submit] response: ', response_json)
     # return (no payload expected)
     return
 
