@@ -10,34 +10,24 @@ blueprint_intake = Blueprint("intake", url_prefix="v1/intake")
 
 
 # ROUTES
-# --- recordings
-@blueprint_intake.route('/recording', methods=['POST'])
-async def app_route_intake_recording(request):
-    # --- save file to S3 and database. needed for API calls later
-    recording_file_key, recording_file_url = intake_file_preprocessing(request.files.get('file'), "mp4")
-    # --- start job (https://docs.bullmq.io/python/introduction)
-    await queue_add_job(queues['intake_recording'], { "file_key": recording_file_key, "file_url": recording_file_url })
-    # --- respond
-    print("[app_route_intake_recording] responding")
-    return json({ 'status': 'success' })
-
-# added GET for ease of trigger/testing
-@blueprint_intake.route('/recording', methods=['GET'])
-async def app_route_intake_recording_test(request):
-    recording_file_key = "03f97535-8d59-401f-b57d-3c54ea80030f.mp4"
-    recording_file_url = get_stored_file_url(recording_file_key)
-    await queue_add_job(queues['intake_recording'], { "file_key": recording_file_key, "file_url": recording_file_url })
-    return json({ 'status': 'success' })
-
-
-# --- recording batch (multiple shorter videos)
-@blueprint_intake.route('/recording/batch', methods=['POST'])
-async def app_route_intake_recording_batch(request):
-    # --- skip file to S3, because device has done it already and is sending us keys/urls
-    # --- start job
-    await queue_add_job(queues['intake_recording_batch'], { "files": request.json.get('files') })
+# --- recording series (multiple shorter videos to reduce sync issues, allow for longer runs bc big files will bust raspberry pi processing)
+@blueprint_intake.route('/recording/series', methods=['POST'])
+async def app_route_intake_recording_series(request):
+    # --- start job (skip file to S3, because device has done it already and is sending us keys/urls)
+    await queue_add_job(queues['intake_recording_series'], { "files": request.json.get('files') })
     # --- respond
     return json({ 'status': 'success' })
+
+# # --- DEPRECATED: recordings (preferring series so we can do longer captures)
+# @blueprint_intake.route('/recording', methods=['POST'])
+# async def app_route_intake_recording(request):
+#     # --- save file to S3 and database. needed for API calls later
+#     recording_file_key, recording_file_url = intake_file_preprocessing(request.files.get('file'), "mp4")
+#     # --- start job (https://docs.bullmq.io/python/introduction)
+#     await queue_add_job(queues['intake_recording'], { "file_key": recording_file_key, "file_url": recording_file_url })
+#     # --- respond
+#     print("[app_route_intake_recording] responding")
+#     return json({ 'status': 'success' })
 
 
 # --- queries

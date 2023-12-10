@@ -66,7 +66,7 @@ class RecordingSessionManager():
 
 
 
-async def _job_intake_recording_batch(files: List[dict]):
+async def _job_intake_recording_series(files: List[dict]):
     """
     Take a list of MP4 files that represent a long session, transcribe/organize them, translate into an outline, send update email
     """
@@ -96,7 +96,7 @@ async def _job_intake_recording_batch(files: List[dict]):
         # --- offset the task time so it's relative to the file (ex: a task starts 2 seconds into the 3rd recording. so task time may be 120s, but we need to start from 2s)
         recorded_task_start_second = rsm.get_recorded_file_second_from_adjusted_second(task['taskStartAtSecond'])
         recorded_task_end_second = rsm.get_recorded_file_second_from_adjusted_second(task['taskEndAtSecond'])
-        print(f"[intake_recording_batch] task: {task['taskName']}, file key: {recording_file['file_key']}, recording start sec: {recorded_task_start_second}, recording end sec: {recorded_task_end_second}")
+        print(f"[intake_recording_series] task: {task['taskName']}, file key: {recording_file['file_key']}, recording start sec: {recorded_task_start_second}, recording end sec: {recorded_task_end_second}")
 
         # --- ensure that our task timings make sense since its a generative output
         if recorded_task_start_second >= recorded_task_end_second:
@@ -138,9 +138,9 @@ async def _job_intake_recording_batch(files: List[dict]):
     # --- return something?
     return
 
-async def job_intake_recording_batch(job, job_token):
+async def job_intake_recording_series(job, job_token):
     # --- get params
     files = job.data['files']
     # --- strinigfy payload to transfer over the wire
-    payload = await _job_intake_recording_batch(files)
+    payload = await _job_intake_recording_series(files)
     return json.dumps(payload)
