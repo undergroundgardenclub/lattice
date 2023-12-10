@@ -27,7 +27,7 @@ def get_media_file_path(media_id, media_chunk_num, media_format):
     return f"{env_directory_data()}/{get_media_key(media_id, media_chunk_num, media_format)}"
 
 # LOOP
-def task_recording_batch(process_events, media_id):
+def task_recording_series(process_events, media_id):
     print('[process] task_record_session: fork')
 
     # INIT

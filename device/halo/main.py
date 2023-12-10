@@ -33,10 +33,10 @@ def process_task_recording_fork(pe, media_id):
     import task_recording # wrapper function so we only import in the new processor and don't have duplicate references
     task_recording.task_recording(pe, media_id)
 # --- recording session
-process_task_recording_batch = None # if we have a process obj here, it's in motion
-def process_task_recording_batch_fork(pe, media_id):
-    import task_recording_batch # wrapper function so we only import in the new processor and don't have duplicate references
-    task_recording_batch.task_recording_batch(pe, media_id)
+process_task_recording_series = None # if we have a process obj here, it's in motion
+def process_task_recording_series_fork(pe, media_id):
+    import task_recording_series # wrapper function so we only import in the new processor and don't have duplicate references
+    task_recording_series.task_recording_series(pe, media_id)
 # --- query
 process_task_query = None # if we have a process obj here, it's in motion
 def process_task_query_fork(pe, media_id):
@@ -53,17 +53,17 @@ def interaction_press_single():
 # --- double
 def interaction_press_double():
     print('[interaction_press_double] triggered')
-    global process_task_recording_batch # means we can reach outside our functions scope
-    print(f'[interaction_press_double] recording: {"started" if process_task_recording_batch == None else "stopping"}')
-    if process_task_recording_batch == None: # start process if one doesn't exist
+    global process_task_recording_series # means we can reach outside our functions scope
+    print(f'[interaction_press_double] recording: {"started" if process_task_recording_series == None else "stopping"}')
+    if process_task_recording_series == None: # start process if one doesn't exist
         media_id = generate_media_id()
-        process_task_recording_batch = multiprocessing.Process(target=process_task_recording_batch_fork, args=(process_events, media_id))
-        process_task_recording_batch.start()
+        process_task_recording_series = multiprocessing.Process(target=process_task_recording_series_fork, args=(process_events, media_id))
+        process_task_recording_series.start()
     else:
         process_events['event_recording_stop'].set() # trigger stop event
-        process_task_recording_batch.join() # TODO: instead of join() we need to iteratively check up on this so we don't block other interactions
+        process_task_recording_series.join() # TODO: instead of join() we need to iteratively check up on this so we don't block other interactions
         process_events['event_recording_stop'].clear() # clear process reference. and "unset" which we are using for control flow (maybe start should be this way too rather than None)
-        process_task_recording_batch = None
+        process_task_recording_series = None
 
 # --- triple
 def interaction_press_triple():
