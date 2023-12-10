@@ -25,7 +25,7 @@ class RecordingSessionManager():
         _transcripts = []
         for file in files:
             self.recording_files.append(file)
-            transcript = speech_to_text(file['file_url'], file['transcript_id']) # transcript_id is only known if we've previously processed
+            transcript = speech_to_text(file.get("file_url"), file.get("transcript_id")) # transcript_id is only known if we've previously processed
             _transcripts.append(transcript)
         self.load_transcripts(_transcripts)
     # --- loader: transcripts -> text/sentences (this lacks the original reference files though :/)
