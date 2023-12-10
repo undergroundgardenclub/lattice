@@ -5,9 +5,9 @@ import pygame
 import sys
 from env import env_device_id, env_directory_data
 from utils_api import req_query
-from utils_files import get_file_bytes
+from utils_files import delete_file, get_file_bytes, get_stored_file_url, store_file_from_path
 from utils_device import led_main
-from utils_media import combine_h264_and_wav_into_mp4, play_audio
+from utils_media import combine_h264_and_wav_into_mp4, get_media_local_file_path, get_media_key, play_audio
 
 # SETUP
 # --- recording: audio
@@ -25,9 +25,10 @@ def task_query(process_events, media_id):
     print('[process] task_query: fork')
     # START
     # --- prep processors
-    media_path_video_h264 = f"{env_directory_data()}/{media_id}.h264"
-    media_path_audio_wav = f"{env_directory_data()}/{media_id}.wav"
-    media_path_final_mp4 = f"{env_directory_data()}/{media_id}.mp4"
+    media_path_video_h264 = get_media_local_file_path(media_id, "h264")
+    media_path_audio_wav = get_media_local_file_path(media_id, "wav")
+    media_path_final_mp4 = get_media_local_file_path(media_id, "mp4")
+    media_mp4_key = get_media_key(media_id, "mp4")
     process_task_record_audio = multiprocessing.Process(target=process_task_record_audio_fork, args=(process_events, media_path_audio_wav))
     process_task_record_video = multiprocessing.Process(target=process_task_record_video_fork, args=(process_events, media_path_video_h264))
     # --- record
@@ -40,16 +41,20 @@ def task_query(process_events, media_id):
     # --- awaiting (aka blocking till resolves)
     process_task_record_audio.join()
     process_task_record_video.join()
-    # --- combing video/audio
+
+    # PROCESS
+    # --- encode mp4s + clean h264/wav files
     combine_h264_and_wav_into_mp4(media_path_video_h264, media_path_audio_wav, media_path_final_mp4)
-    # --- send API file payload
-    query_response_data = req_query(media_path_final_mp4, dict(device_id=env_device_id()))
-    # --- clean up src files
-    os.remove(media_path_video_h264)
-    os.remove(media_path_video_h264 + ".json")
-    os.remove(media_path_audio_wav)
-    os.remove(media_path_audio_wav + ".json")
-    os.remove(media_path_final_mp4)
+    # --- upload query recording to S3
+    store_file_from_path(media_path_final_mp4, media_mp4_key)
+    # --- clean up files
+    delete_file(media_path_video_h264)
+    delete_file(media_path_video_h264 + ".json")
+    delete_file(media_path_audio_wav)
+    delete_file(media_path_audio_wav + ".json")
+    delete_file(media_path_final_mp4)
+    # --- send API req
+    query_response_data = req_query(query_file=dict(file_key=media_mp4_key, file_url=get_stored_file_url(media_mp4_key)))
 
     # PLAY AUDIO
     # --- fetch audio (don't save to disk, keep in memory for simplicity, these are short and compress mp3s)

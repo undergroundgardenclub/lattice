@@ -8,7 +8,7 @@ from env import env_device_id, env_directory_data
 from utils_api import req_recording_batch_submit
 from utils_device import led_main
 from utils_files import delete_file, store_file_from_path, get_stored_file_url
-from utils_media import calculate_offset_seconds, combine_h264_and_wav_into_mp4
+from utils_media import calculate_offset_seconds, combine_h264_and_wav_into_mp4, get_media_local_file_path, get_media_key
 
 
 # SETUP
@@ -20,11 +20,7 @@ def process_task_record_audio_fork(pe, media_path_audio_wav):
 def process_task_record_video_fork(pe, media_path_video_h264):
     import task_record_video
     task_record_video.task_record_video(pe, media_path_video_h264)
-# --- media path for chunks
-def get_media_key(media_id, media_chunk_num, media_format):
-    return f"{media_id}--{media_chunk_num}.{media_format}"
-def get_media_file_path(media_id, media_chunk_num, media_format):
-    return f"{env_directory_data()}/{get_media_key(media_id, media_chunk_num, media_format)}"
+
 
 # LOOP
 def task_recording_series(process_events, media_id):
@@ -47,9 +43,9 @@ def task_recording_series(process_events, media_id):
         chunk_count += 1
         chunk_start_ns = time.time_ns()
         # --- recording chunk: setup (TODO: should processing starts be done only once? and have video/audio processes responbile for chunking? that saves time for allocating processors)
-        media_path_audio_wav = get_media_file_path(media_id, chunk_count, "wav")
-        media_path_video_h264 = get_media_file_path(media_id, chunk_count, "h264")
-        media_path_final_mp4 = get_media_file_path(media_id, chunk_count, "mp4")
+        media_path_audio_wav = get_media_local_file_path(media_id, "wav", chunk_count)
+        media_path_video_h264 = get_media_local_file_path(media_id, "h264", chunk_count)
+        media_path_final_mp4 = get_media_local_file_path(media_id, "mp4", chunk_count)
         process_task_record_audio = multiprocessing.Process(target=process_task_record_audio_fork, args=(process_events, media_path_audio_wav))
         process_task_record_video = multiprocessing.Process(target=process_task_record_video_fork, args=(process_events, media_path_video_h264))
         # --- recording chunk: start
@@ -86,20 +82,20 @@ def task_recording_series(process_events, media_id):
     for i in range(chunk_count):        
         c = i + 1 # count/index starts at 1
         combine_h264_and_wav_into_mp4(
-            get_media_file_path(media_id, c, "h264"),
-            get_media_file_path(media_id, c, "wav"),
-            get_media_file_path(media_id, c, "mp4"))
-        delete_file(get_media_file_path(media_id, c, "h264"))
-        delete_file(get_media_file_path(media_id, c, "h264.json"))
-        delete_file(get_media_file_path(media_id, c, "wav"))
-        delete_file(get_media_file_path(media_id, c, "wav.json"))
+            get_media_local_file_path(media_id, "h264", c),
+            get_media_local_file_path(media_id, "wav", c),
+            get_media_local_file_path(media_id, "mp4", c))
+        delete_file(get_media_local_file_path(media_id, "h264", c))
+        delete_file(get_media_local_file_path(media_id, "h264.json", c))
+        delete_file(get_media_local_file_path(media_id, "wav", c))
+        delete_file(get_media_local_file_path(media_id, "wav.json", c))
     # --- upload all to S3 + clean files mp4 files + compile list of files
     print('recording chunk: uploading')
     recording_files = []
     for i in range(chunk_count):
         c = i + 1
-        mp4_key = get_media_key(media_id, c, "mp4")
-        mp4_file_path = get_media_file_path(media_id, c, "mp4")
+        mp4_key = get_media_key(media_id, "mp4", c)
+        mp4_file_path = get_media_local_file_path(media_id, "mp4", c)
         store_file_from_path(mp4_file_path, mp4_key)
         delete_file(mp4_file_path)
         recording_files.append(dict(file_key=mp4_key, file_url=get_stored_file_url(mp4_key)))

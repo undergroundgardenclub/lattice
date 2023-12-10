@@ -1,7 +1,7 @@
 from pygame import mixer
 import subprocess
 import time
-from env import env_device_id, env_recording_frame_rate, env_recording_sample_rate
+from env import env_device_id, env_directory_data, env_recording_frame_rate, env_recording_sample_rate
 from utils_files import read_file_json
 
 
@@ -41,8 +41,19 @@ def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_
     subprocess.run(command, check=True)
 
 # MEDIA
+# --- ids
 def generate_media_id():
     return f"{env_device_id()}-{int(time.time())}"
+
+# --- keys/paths # TODO: could make this kargs spread for joining many props
+def get_media_key(media_id, media_format, media_chunk_num = None):
+    if media_chunk_num == None:
+        return f"{media_id}.{media_format}"
+    return f"{media_id}--{media_chunk_num}.{media_format}"
+
+def get_media_local_file_path(media_id, media_format, media_chunk_num = None):
+    return f"{env_directory_data()}/{get_media_key(media_id, media_format, media_chunk_num)}"
+
 
 # AUDIO
 def play_audio(audio_bytes, is_blocking=True):
