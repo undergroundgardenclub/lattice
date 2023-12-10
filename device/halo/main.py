@@ -23,13 +23,20 @@ interaction_active = None
 # TASKS
 # --- events dict for passing to sub-processes
 process_events = {
-    'event_stop_recording': multiprocessing.Event()
+    'event_recording_stop': multiprocessing.Event(),
+    'event_recording_audio_stop': multiprocessing.Event(),
+    'event_recording_video_stop': multiprocessing.Event(),
 }
 # --- recording
 process_task_recording = None # if we have a process obj here, it's in motion
 def process_task_recording_fork(pe, media_id):
     import task_recording # wrapper function so we only import in the new processor and don't have duplicate references
     task_recording.task_recording(pe, media_id)
+# --- recording session
+process_task_recording_batch = None # if we have a process obj here, it's in motion
+def process_task_recording_batch_fork(pe, media_id):
+    import task_recording_batch # wrapper function so we only import in the new processor and don't have duplicate references
+    task_recording_batch.task_recording_batch(pe, media_id)
 # --- query
 process_task_query = None # if we have a process obj here, it's in motion
 def process_task_query_fork(pe, media_id):

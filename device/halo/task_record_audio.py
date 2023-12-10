@@ -26,7 +26,7 @@ def task_record_audio(process_events, media_path_audio_wav):
     # --- record
     stream = audio.open(format=audio_format, channels=audio_channels, rate=audio_sample_rate, input=True, frames_per_buffer=audio_chunk)
     frames = []
-    while process_events['event_stop_recording'].is_set() == False:
+    while process_events['event_recording_stop'].is_set() == False and process_events['event_recording_audio_stop'].is_set() == False:
         # --- on first frame, save metadata
         if start_time_ns == None:
             start_time_ns = time.time_ns()

@@ -20,15 +20,15 @@ def task_record_video(process_events, media_path_video_h264):
     start_time_ns = None
 
     # START
+    # dealing with some choppy video cap at times, so may need to consider other paths: https://forums.raspberrypi.com/viewtopic.php?t=245875#p1673963
     with Picamera2() as picam2:
         picam2_config = picam2.create_video_configuration({ 'size': video_size }, controls={
-            # "ExposureValue": 0.5, # not sure this is worthwhile, https://github.com/raspberrypi/picamera2/issues/652#issuecomment-1539789593
             "FrameDurationLimits": (video_frame_duration_limit, video_frame_duration_limit)
         })
         picam2.configure(picam2_config)
         # recording kicks off at path provided (post-recording, files can be modified/merged/removed)
-        picam2.start_recording(video_encoder, output=media_path_video_h264, quality=Quality.MEDIUM)
-        while process_events['event_stop_recording'].is_set() == False:
+        picam2.start_recording(video_encoder, output=media_path_video_h264, quality=Quality.LOW)
+        while process_events['event_recording_stop'].is_set() == False and process_events['event_recording_video_stop'].is_set() == False:
             # --- on first frame, save metadata
             if start_time_ns == None:
                 start_time_ns = time.time_ns()
