@@ -1,9 +1,12 @@
 from adafruit_debouncer import Debouncer
 import digitalio
+import json
 import multiprocessing
 import time
-from utils_device import led_pattern, PIN_RECORD_BUTTON
-from utils_media import generate_media_id
+from utils_api import req_get_device_messages
+from utils_device import calculate_offset_seconds, led_pattern, PIN_RECORD_BUTTON
+from utils_files import get_file_bytes
+from utils_media import generate_media_id, play_audio
 
 
 # SETUP
@@ -13,19 +16,27 @@ button_input = digitalio.DigitalInOut(PIN_RECORD_BUTTON)
 button_input.switch_to_input(pull=digitalio.Pull.UP) # if button pressed, button.fell = True
 button = Debouncer(button_input)
 # --- interaction trackers/globals
-BUTTON_PRESS_WINDOW_TIMER = 1.0 # seconds
+BUTTON_PRESS_WINDOW_TIME_SECS = 1.2 # seconds
 button_press_count = 0
-button_press_last_at = 0
+button_press_last_at = 0 # int for less conditional logic
 button_press_last_state = False
 interaction_active = None
+# --- message listener
+DEVICE_MESSAGES_CHECK_WINDOW_TIME_SECS = 5
+device_messages_checked_last_at = 0 # int for less conditional logic
+device_messages = []
 
 
 # TASKS
+# --- queues for data passing between processes
+process_queues = {
+    "queue_messages": multiprocessing.Queue()
+}
 # --- events dict for passing to sub-processes
 process_events = {
-    'event_recording_stop': multiprocessing.Event(),
-    'event_recording_audio_stop': multiprocessing.Event(),
-    'event_recording_video_stop': multiprocessing.Event(),
+    "event_recording_stop": multiprocessing.Event(),
+    "event_recording_audio_stop": multiprocessing.Event(),
+    "event_recording_video_stop": multiprocessing.Event(),
 }
 # --- recording
 process_task_recording = None # if we have a process obj here, it's in motion
@@ -53,6 +64,11 @@ def interaction_press_single():
 # --- double
 def interaction_press_double():
     print('[interaction_press_double] triggered')
+    led_pattern("error")
+
+# --- triple
+def interaction_press_triple():
+    print('[interaction_press_triple] triggered')
     global process_task_recording_series # means we can reach outside our functions scope
     print(f'[interaction_press_double] recording: {"started" if process_task_recording_series == None else "stopping"}')
     if process_task_recording_series == None: # start process if one doesn't exist
@@ -64,11 +80,6 @@ def interaction_press_double():
         process_task_recording_series.join() # TODO: instead of join() we need to iteratively check up on this so we don't block other interactions
         process_events['event_recording_stop'].clear() # clear process reference. and "unset" which we are using for control flow (maybe start should be this way too rather than None)
         process_task_recording_series = None
-
-# --- triple
-def interaction_press_triple():
-    print('[interaction_press_triple] triggered')
-    led_pattern("error")
 
 # --- long press
 def interaction_press_long(is_button_pressed):
@@ -96,7 +107,7 @@ try:
         is_button_pressed = not button.value
 
 
-        # INTERACTION PATTERN
+        # PERIPHERAL INTERACTION PATTERN
         # --- listen for clicks
         if is_button_pressed and button_press_last_state == False:
             button_press_last_state = True
@@ -145,7 +156,27 @@ try:
             interaction_active = None
 
 
-        # TODO: should we do some clean up of processes/event flags? using is_alive()?
+        # MESSAGES LISTENING
+        # --- fetch messages if any exist, add to queue
+        if now - device_messages_checked_last_at >= DEVICE_MESSAGES_CHECK_WINDOW_TIME_SECS:
+            device_messages_checked_last_at = now
+            new_messages = req_get_device_messages()
+            if len(new_messages) > 0:
+                for m in new_messages:
+                    process_queues["queue_messages"].put(m)
+
+        # --- if messages queued, do it (will become multi-thread/processor oriented)
+        if process_queues["queue_messages"].qsize() > 0:
+            # ... parse data from json string
+            next_message = process_queues["queue_messages"].get()
+            next_message_type = next_message["type"]
+            next_message_data = json.loads(next_message.get("data"))
+            print(f"[device_message] processing: {next_message_type}", next_message_data)
+            # ... execute
+            if (next_message_type == "play_audio"):
+                audio_bytes = get_file_bytes(next_message_data.get("file_url"))
+                play_audio(audio_bytes, is_blocking=False)
+
 
         time.sleep(0.01)  # Small delay to debounce and reduce CPU usage
 except Exception as error:

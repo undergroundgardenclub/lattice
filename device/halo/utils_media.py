@@ -52,14 +52,17 @@ def get_media_local_file_path(media_id, media_format, media_chunk_num = None):
 
 
 # AUDIO
-def play_audio(audio_bytes, is_blocking=True):
-    print("[play_audio] playing")
+AUDIO_CHANNEL_MAIN = 0
+# AUDIO_CHANNEL_NOTIFICATIONS = 1 # maybe notifs on separate channel so it can play w/o interrupting main audio
+
+def play_audio(audio_bytes, is_blocking: bool, channel = AUDIO_CHANNEL_MAIN):
+    print(f"[play_audio] playing (is_blocking = {is_blocking})")
     mixer.init()
     # --- create sound
     sound = mixer.Sound(audio_bytes)
     # --- create channel + play
-    channel = mixer.Channel(0) # must provide id. in the future may need to manage this if doing audio playback + notifications sounds
-    channel.set_volume(0.65)
+    channel = mixer.Channel(channel) # must provide id. in the future may need to manage this if doing audio playback + notifications sounds
+    channel.set_volume(0.75)
     channel.play(sound, loops=0)
     # --- wait till done playing sound before returning (needed seomtimes bc a process exit stops sound)
     if is_blocking:
