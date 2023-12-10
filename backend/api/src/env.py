@@ -23,7 +23,21 @@ def env_aws_access_key_id():
 def env_aws_secret_access_key():
     return _env_getter('AWS_SECRET_ACCESS_KEY')
 def env_aws_s3_files_bucket():
-    return _env_getter('AWS_FILES_BUCKET')
+    return _env_getter('AWS_BUCKET_FILES')
+
+# DATABASE
+def env_database_app_user_name():
+    return _env_getter('DATABASE_APP_USER_NAME')
+def env_database_app_user_password():
+    return _env_getter('DATABASE_APP_USER_PASSWORD')
+def env_database_app_name():
+    return _env_getter('DATABASE_APP_NAME')
+def env_database_app_host():
+    return _env_getter('DATABASE_APP_HOST')
+def env_database_app_port():
+    return _env_getter('DATABASE_APP_PORT')
+def env_database_app_url(driver="asyncpg"):
+    return f"postgresql+{driver}://{env_database_app_user_name()}:{env_database_app_user_password()}@{env_database_app_host()}:{env_database_app_port()}/{env_database_app_name()}"
 
 # ELEVENT LABS
 def env_eleven_labs_api_key():

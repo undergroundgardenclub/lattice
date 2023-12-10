@@ -20,6 +20,7 @@ requests==2.28.1
 sanic==23.6.0
 Sanic_Cors==2.2.0
 sendgrid==6.11.0
+SQLAlchemy==2.0.23
 torch==2.1.1
 transformers==4.35.2
 watchdog==2.2.0
