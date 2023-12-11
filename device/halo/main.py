@@ -2,6 +2,7 @@ from adafruit_debouncer import Debouncer
 import digitalio
 import json
 import multiprocessing
+import threading
 import time
 from utils_api import req_get_device_messages
 from utils_device import calculate_offset_seconds, EVENT_TYPE_PLAY_AUDIO, EVENT_TYPE_RECORD_SERIES, EVENT_TYPE_RECORD_QUERY, led_main, led_pattern, PIN_RECORD_BUTTON
@@ -50,11 +51,11 @@ def processor_recorder_fork(pe, pq):
     processor_recorder.processor_recorder(pe, pq)
 ps_processor_recorder = multiprocessing.Process(target=processor_recorder_fork, args=(process_events, process_queues))
 ps_processor_recorder.start()
-# --- processes: sending
+# --- processes: sending (doing a thread to leave processors open for load balancing/orchestrating. this isn't doing dedicated work)
 def processor_sender_fork(pe, pq):
     import processor_sender
     processor_sender.processor_sender(pe, pq)
-ps_processor_sender = multiprocessing.Process(target=processor_sender_fork, args=(process_events, process_queues))
+ps_processor_sender = threading.Thread(target=processor_sender_fork, args=(process_events, process_queues))
 ps_processor_sender.start()
 
 
@@ -97,7 +98,7 @@ def interaction_press_long(pe, pq, is_button_pressed):
 print('[main] LOOP')
 try:
     while True:
-        now = time.monotonic()
+        now = time.time()
         # PERIPHERAL: SETUP
         button.update()
         is_button_pressed = not button.value
@@ -159,7 +160,7 @@ try:
             interaction_active = None
 
 
-        # MESSAGES LISTENING
+        # MESSAGES LISTENING (TODO: move into a thread? prob unnecessary resource allocation)
         # --- fetch messages if any exist, add to queue
         if now - device_messages_checked_last_at >= DEVICE_MESSAGES_CHECK_WINDOW_TIME_SECS:
             device_messages_checked_last_at = now
@@ -190,7 +191,7 @@ try:
             led_pattern("error")
         if ps_processor_sender.is_alive() == False:
             print("[loop] 'ps_processor_sender' dead, starting again")
-            ps_processor_sender = multiprocessing.Process(target=processor_sender_fork, args=(process_events, process_queues))
+            ps_processor_sender = threading.Thread(target=processor_sender_fork, args=(process_events, process_queues))
             ps_processor_sender.start()
             led_pattern("error")
 

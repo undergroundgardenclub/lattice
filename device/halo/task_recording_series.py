@@ -40,7 +40,7 @@ def task_recording_series(process_events, media_id):
 
     while process_events['event_recording_stop'].is_set() == False:
         chunk_count += 1
-        chunk_start_sec = time.monotonic()
+        chunk_start_sec = time.time()
         # --- recording chunk: setup (TODO: should processing starts be done only once? and have video/audio processes responbile for chunking? that saves time for allocating processors)
         media_path_audio_wav = get_media_local_file_path(media_id, "wav", chunk_count)
         media_path_video_h264 = get_media_local_file_path(media_id, "h264", chunk_count)
@@ -53,7 +53,7 @@ def task_recording_series(process_events, media_id):
         print('recording chunk: started')
 
         # --- block/sync until either event to stop or past chunk duration/length
-        while process_events['event_recording_stop'].is_set() == False and calculate_offset_seconds(chunk_start_sec, time.monotonic()) < chunk_duration_sec:
+        while process_events['event_recording_stop'].is_set() == False and calculate_offset_seconds(chunk_start_sec, time.time()) < chunk_duration_sec:
             time.sleep(0.1) # easier on the CPU usage?
         
         # --- recording chunk: trigger video/audio end and wait for process to exit (may be duplicative, but harmless)

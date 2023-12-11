@@ -29,7 +29,7 @@ def task_record_audio(process_events, media_path_audio_wav):
     while process_events['event_recording_stop'].is_set() == False and process_events['event_recording_audio_stop'].is_set() == False:
         # --- on first frame, save metadata
         if start_time_sec == None:
-            start_time_sec = time.monotonic()
+            start_time_sec = time.time()
         # --- push data
         data = stream.read(audio_chunk)
         frames.append(data)

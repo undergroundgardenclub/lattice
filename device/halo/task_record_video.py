@@ -31,7 +31,7 @@ def task_record_video(process_events, media_path_video_h264):
         while process_events['event_recording_stop'].is_set() == False and process_events['event_recording_video_stop'].is_set() == False:
             # --- on first frame, save metadata
             if start_time_sec == None:
-                start_time_sec = time.monotonic()
+                start_time_sec = time.time()
             # --- otherwise, noop, i tried doing a sleep command to reduce CPU load but it messed with timing i think
             continue
 
