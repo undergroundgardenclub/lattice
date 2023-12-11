@@ -4,7 +4,7 @@ import sys
 import time
 from uuid import uuid4
 from env import env_device_id, env_directory_data
-from utils_api import req_recording_series_submit
+from utils_api import req_recording_batch_submit
 from utils_device import calculate_offset_seconds, led_main
 from utils_files import delete_file, store_file_from_path, get_stored_file_url
 from utils_media import combine_h264_and_wav_into_mp4, get_media_local_file_path, get_media_key
@@ -48,8 +48,8 @@ def task_recording_series(process_events, media_id):
         process_task_record_audio = multiprocessing.Process(target=process_task_record_audio_fork, args=(process_events, media_path_audio_wav))
         process_task_record_video = multiprocessing.Process(target=process_task_record_video_fork, args=(process_events, media_path_video_h264))
         # --- recording chunk: start
-        process_task_record_audio.start()
         process_task_record_video.start()
+        process_task_record_audio.start()
         print('recording chunk: started')
 
         # --- block/sync until either event to stop or past chunk duration/length
@@ -58,8 +58,8 @@ def task_recording_series(process_events, media_id):
         
         # --- recording chunk: trigger video/audio end and wait for process to exit (may be duplicative, but harmless)
         print('recording chunk: set')
-        process_events['event_recording_audio_stop'].set()
         process_events['event_recording_video_stop'].set()
+        process_events['event_recording_audio_stop'].set()
 
         # --- recording chunk: await resolution
         print('recording chunk: join', process_events['event_recording_audio_stop'].is_set(), process_events['event_recording_video_stop'].is_set())
@@ -70,8 +70,8 @@ def task_recording_series(process_events, media_id):
         # NOOP: taking time merging while not stopped will create breaks between segments
 
         # --- reset flags for video/audio
-        process_events['event_recording_audio_stop'].clear()
         process_events['event_recording_video_stop'].clear()
+        process_events['event_recording_audio_stop'].clear()
         print('recording chunk: done')
 
 
@@ -101,7 +101,7 @@ def task_recording_series(process_events, media_id):
 
     # --- send a req to backend for processing and creating an outline?
     print('recording chunk: sending api files list')
-    req_recording_series_submit(recording_files)
+    req_recording_batch_submit(recording_files)
     
 
     # EXIT

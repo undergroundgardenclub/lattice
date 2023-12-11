@@ -31,8 +31,8 @@ def task_query(process_events, media_id):
     process_task_record_audio = multiprocessing.Process(target=process_task_record_audio_fork, args=(process_events, media_path_audio_wav))
     process_task_record_video = multiprocessing.Process(target=process_task_record_video_fork, args=(process_events, media_path_video_h264))
     # --- record
-    process_task_record_audio.start()
     process_task_record_video.start()
+    process_task_record_audio.start()
 
     # AWAIT
     # --- led indicator
