@@ -24,7 +24,6 @@ interaction_active = None
 # --- message listener
 DEVICE_MESSAGES_CHECK_WINDOW_TIME_SECS = 5
 device_messages_checked_last_at = 0 # int for less conditional logic
-device_messages = []
 
 
 # TASKS
@@ -178,7 +177,7 @@ try:
                 play_audio(audio_bytes, is_blocking=False)
 
 
-        time.sleep(0.01)  # Small delay to debounce and reduce CPU usage
+        time.sleep(0.1)  # Small delay to debounce and reduce CPU usage
 except Exception as error:
     print("[loop] error: ", error)
     led_pattern("error")
