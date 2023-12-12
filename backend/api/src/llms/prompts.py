@@ -31,9 +31,10 @@ def prompt_recording_transcript_to_task_outline(transcripts_sentences: str, task
     # query
     response = openai_client.chat.completions.create(
         model="gpt-4-1106-preview",
+        # model="gpt-3.5-turbo-1106",
         response_format={ "type": "json_object" },
         messages=[
-            { "role": "system", "content": "You are a helpful lab assistant designed to output JSON annotating lab work/protocols with the schema, { protocolTasks: { taskName: str; taskObjective: str; taskActions: str[]; taskStartAtSecond?: int; taskEndAtSecond?: int; }[] }. Given an audio transcript as YML and task names as an array string, associate actions and observations mentioned in the transcript with each as an array of task objects." },
+            { "role": "system", "content": "You are a helpful assistant designed to output JSON representing a transcript of work being done with the schema, { protocolTasks: { taskName: str; taskSummary: str; taskActions: str[]; taskStartAtSecond?: int; taskEndAtSecond?: int; }[] }. Given an audio transcript as YML and task names as an array string, derive a summary of what occurred with each task and a related set of actions." },
             # converting to YML because its considered fewer tokens
             { "role": "user", "content": f"Task Names: {task_headers}\n\nTranscript YML:\n\n{yaml.dump(transcripts_sentences)}" }
         ],
@@ -53,13 +54,14 @@ def prompt_query(question_text: str, question_image_arr: np.ndarray):
     base64_image = encoded_frame_to_base64(question_image_arr)
     # query
     response = openai_client.chat.completions.create(
-        model="gpt-4-vision-preview",
+        # model="gpt-4-vision-preview", # I'd like faster queries on data, and visuals is less important for that
+        model="gpt-4-1106-preview",
         messages=[
             { "role": "system", "content": "You are a helpful lab assistant answer questions, making observations, and being helpful to lab scientists. Your responses must be 2 to 3 sentences maximum. It is critical to be brief and to the point." },
             {
                 "role": "user",
                 "content": [
-                    { "type": "image_url", "image_url": { "url": f"data:image/jpeg;base64,{base64_image}" } },
+                    # { "type": "image_url", "image_url": { "url": f"data:image/jpeg;base64,{base64_image}" } },
                     { "type": "text", "text": question_text },
                 ]
             }
