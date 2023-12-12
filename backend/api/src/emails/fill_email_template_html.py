@@ -8,15 +8,15 @@ from vision.cv import encoded_frame_to_base64
 def fill_email_template_html_tasks_summary(tasks: List[dict]) -> (str, List):
     print(f"[fill_email_template_html_tasks_summary] {len(tasks)} tasks to HTML")
     # SETUP
-    # --- open
-    email_html = "<html><body>"
+    # --- open (adding CSS for tables so we can do a series of images)
+    email_html = "<html><head><style>table {width: 100%;}td {text-align: center;}img {display: inline-block;max-width: 100%;height: auto;}</style></head><body>"
     # --- compile files for sendgrid, using consistent cid
     # email_files = []
 
     for task in tasks:
         # --- header
         email_html += f"<h4><u>TASK: {task.get('taskName')}</u></h4>"
-        email_html += f"<p>{task.get('taskSummary')}"
+        email_html += f"<p>{task.get('taskObjective')}"
         # --- observation (TODO: trying to make this an AI reflective statement as 3rd party)
         # --- actions bullet list
         if len(task.get("taskActions", [])) > 0:
@@ -25,18 +25,14 @@ def fill_email_template_html_tasks_summary(tasks: List[dict]) -> (str, List):
                 email_html += f"<li>{action}</li>"
             email_html += "</ul>"
         # --- image (could do attachments + cid reference, or base64 inline)
-        if task.get("image") is not None:
-            image_base64_encoded = encoded_frame_to_base64(task.get("image"))
-            email_html += f"<img src='data:image/jpeg;base64,{image_base64_encoded}' />"
-            # CID METHOD DOES NOT WORK, DOING BASE64 ENCODING INLINE
-            # email_files.append({
-            #     'filename': f"{snake_case(task['taskName'])}.jpg",
-            #     'contentType': 'image/jpeg',
-            #     'cid': snake_case(task['taskName']),
-            #     'content': image_base64_encoded
-            # })
-            # email_html += f"<img src='cid:{snake_case(task['taskName'])}' />"
-
+        if hasattr(task.get("images"), '__iter__'):
+            # --- start table
+            email_html += "<table cellspacing='0' cellpadding='0'><tr>"
+            # --- add image <td>
+            for image in task.get("images"):
+                email_html += f"<td><img src='data:image/jpeg;base64,{encoded_frame_to_base64(image)}' /></td>"
+            # --- close table
+            email_html += "</tr></table>"
 
         # --- gap
         email_html += "<br/>"
