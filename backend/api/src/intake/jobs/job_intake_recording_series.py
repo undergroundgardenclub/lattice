@@ -3,7 +3,7 @@ import json
 import sqlalchemy as sa
 from orm import sa_sessionmaker
 from file.file_cloud_storage import get_stored_file_bytes
-from file.file_utils import get_media_duration, tmp_file_rmv, tmp_file_set
+from file.file_utils import get_media_file_duration, tmp_file_rmv, tmp_file_set
 from intake.Recording import Recording
 from voice.speech_to_text import speech_to_text
 
@@ -21,7 +21,7 @@ async def _job_intake_recording_series(file: dict, device_id: str, series_id: st
     media_file_bytes = get_stored_file_bytes(file.get("file_key")) # TODO: request.files.get('file') but writing offline atm
     tmp_file_path = tmp_file_set(media_file_bytes) # need file path for OpenCV processing
     try:
-        recording_duration_sec = get_media_duration(tmp_file_path)
+        recording_duration_sec = get_media_file_duration(tmp_file_path)
     finally:
         tmp_file_rmv(tmp_file_path)
 

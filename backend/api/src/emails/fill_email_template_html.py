@@ -16,7 +16,7 @@ def fill_email_template_html_tasks_summary(tasks: List[dict]) -> (str, List):
     for task in tasks:
         # --- header
         email_html += f"<h4><u>TASK: {task.get('taskName')}</u></h4>"
-        email_html += f"<p>{task.get('taskObjective')}"
+        email_html += f"<p>{task.get('taskSummary')}"
         # --- observation (TODO: trying to make this an AI reflective statement as 3rd party)
         # --- actions bullet list
         if len(task.get("taskActions", [])) > 0:

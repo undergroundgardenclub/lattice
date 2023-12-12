@@ -1,4 +1,7 @@
+import os
 from typing import List
+from file.file_cloud_storage import get_stored_file_bytes
+from file.file_utils import merge_media_files, tmp_file_path, tmp_file_rmv, tmp_file_set
 from intake.Recording import Recording
 from voice.speech_to_text import speech_to_text
 
@@ -10,11 +13,13 @@ class RecordingSeriesManager():
     transcripts = []
     transcripts_text: str = ""
     transcripts_sentences = []
+    # --- extras loading/processing
+    series_recording_file_path = None
 
     # LOADERRS
+    # --- transcripts/recordings
     def load_recordings(self, recordings) -> None:
         print(f"[load_recordings] num recording = {len(recordings)}")
-
         # --- transcript setup
         current_recordings_duration_sec = 0
         for rec_idx in range(len(recordings)): # when i did enumerate that thing ran non-stop
@@ -32,35 +37,34 @@ class RecordingSeriesManager():
             current_recordings_duration_sec += recordings[rec_idx].recording_duration_sec
             # --- push recording
             self.recordings.append(recordings[rec_idx])
-
         # --- final duration
         self.recordings_duration_sec = current_recordings_duration_sec
         print("[load_recordings] recordings_duration_sec: ", self.recordings_duration_sec)
 
-    # HELPERS
-    # --- grab recording files after times were mapped
-    def get_recording_file_at_adjusted_second(self, second: int) -> dict:
-        at_sec = 0
-        for rec in self.recordings:
-            if at_sec <= second and second <= (at_sec + rec.recording_duration_sec):
-                print(f"FOUND, second = {second}, at_sec = {at_sec}", rec.transcript_sentences)
-                return rec
-            at_sec += rec.recording_duration_sec
+    # --- series recording
+    def join_recordings(self) -> str:
+        print("[join_recordings] start")
+        self.series_recording_file_path = tmp_file_path("series_recording_")
+        # --- merge to tmp file on disk (TODO: make this go faster)
+        recording_keys = [rec.recording_file_key for rec in self.recordings]
+        recording_paths = []
+        try:
+            print("[join_recordings] downloading tmp files: ", recording_paths)
+            for rk in recording_keys:
+                bytes = get_stored_file_bytes(rk)
+                path = tmp_file_set(bytes)
+                recording_paths.append(path)
+            # --- merge
+            merge_media_files(recording_paths, self.series_recording_file_path)
+        finally:
+            # --- clean up tmp files needed for merge
+            print("[join_recordings] cleaning tmp files: ", recording_paths)
+            for path in recording_paths:
+                tmp_file_rmv(path)
 
-    def get_recorded_file_second_from_adjusted_second(self, second: int) -> int:
-        """
-        Returns the number of seconds into a recording file. The "second" argument provided is across a series of videos.
-        Ex: if second=70, and our recordings are 60 sec chunks, this function will return 10
-        """
-        at_sec = 0
-        # --- scan for recording file we're in, based on their durations
-        for rec in self.recordings:
-            # --- subtract second from (at_sec + recording_duration_sec) to get the diff
-            if at_sec <= second and second <= (at_sec + rec.recording_duration_sec):
-                return second - at_sec # doing subtraction, because we want to remove the total prior recording time
-            # --- if we're not in the block, continue on
-            at_sec += rec.recording_duration_sec
-
-    # --- calcs
-    def calc_second_between (self, second_start: int, second_end: int) -> int:
-        return second_start + ((second_end - second_start) / 2)
+    def remove_series_recording_file(self) -> None:
+        if self.series_recording_file_path and os.path.exists(self.series_recording_file_path):
+            os.remove(self.series_recording_file_path)
+            print(f"Removed series recording file: {self.series_recording_file_path}")
+        # --- clear reference
+        self.series_recording_file_path = None
