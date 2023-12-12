@@ -40,11 +40,6 @@ process_queues = {
 }
 # --- events dict for passing to sub-processes
 process_events = {
-    # v1
-    "event_recording_stop": multiprocessing.Event(),
-    "event_recording_audio_stop": multiprocessing.Event(),
-    "event_recording_video_stop": multiprocessing.Event(),
-    # v2
     "event_is_recording_series": multiprocessing.Event(), # events start is_set() == False
     "event_is_recording_query": multiprocessing.Event(), # events start is_set() == False
 }

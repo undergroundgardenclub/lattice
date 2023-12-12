@@ -3,6 +3,7 @@ import digitalio
 import time
 from typing import Optional
 
+
 # PINS
 PIN_RECORD_BUTTON = board.D14
 PIN_LED = board.D23
