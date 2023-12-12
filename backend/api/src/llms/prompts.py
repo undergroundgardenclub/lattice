@@ -27,15 +27,15 @@ def prompt_recording_transcript_to_task_headers(transcript: str) -> List[str]:
     # return
     return headers
 
-def prompt_recording_transcript_to_task_outline(transcript: str, task_headers: List[str]):
+def prompt_recording_transcript_to_task_outline(transcripts_sentences: str, task_headers: List[str]):
     # query
     response = openai_client.chat.completions.create(
         model="gpt-4-1106-preview",
         response_format={ "type": "json_object" },
         messages=[
-            { "role": "system", "content": "You are a helpful lab assistant designed to output JSON annotating lab work/protocols with the schema, { protocolTasks: { taskName: str; taskSummary: str; taskActions: str[]; taskStartAtSecond?: int; taskEndAtSecond?: int; }[] }. Given an audio transcript as YML and task names as an array string, associate actions and observations mentioned in the transcript with each as an array of task objects." },
+            { "role": "system", "content": "You are a helpful lab assistant designed to output JSON annotating lab work/protocols with the schema, { protocolTasks: { taskName: str; taskObjective: str; taskActions: str[]; taskStartAtSecond?: int; taskEndAtSecond?: int; }[] }. Given an audio transcript as YML and task names as an array string, associate actions and observations mentioned in the transcript with each as an array of task objects." },
             # converting to YML because its considered fewer tokens
-            { "role": "user", "content": f"Task Names: {task_headers}\n\nTranscript YML:\n\n{yaml.dump(transcript)}" }
+            { "role": "user", "content": f"Task Names: {task_headers}\n\nTranscript YML:\n\n{yaml.dump(transcripts_sentences)}" }
         ],
         temperature=0.2,
     )

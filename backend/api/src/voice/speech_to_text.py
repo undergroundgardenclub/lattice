@@ -64,12 +64,22 @@ def speech_to_text(file_url: Optional[str] = None, transcript_id: Optional[str] 
             sentence_milliseconds_start = None
             sentence_milliseconds_end = None
 
+    # --- if no sentence was formed (ex: a few words, broken up by periods), then put all words in as one
+    if len(sentences) == 0:
+        sentences = [{
+            "text": " ".join([w['text'] for w in transcript_response['words']]),
+            "second_start": math.floor(transcript_response['words'][0]['start'] / 1000),
+            "second_end": math.floor(transcript_response['words'][-1]['end'] / 1000),
+        }]
+
+
     # RETURN
     results = {
-        'response': transcript_response, # if we want to do other operations
-        'sentences': sentences,
-        'text': transcript_response['text'],
-        'words': transcript_response['words'],
+        "transcript_id": t_id,
+        "response": transcript_response, # if we want to do other operations
+        "sentences": sentences,
+        "text": transcript_response["text"],
+        "words": transcript_response["words"],
     }
     print(f"[speech_to_text] transcribed {t_id}")
     return results
