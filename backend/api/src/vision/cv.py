@@ -5,9 +5,9 @@ import numpy as np
 
 
 # ENCODINGS
-def encode_frame_to_jpg(frame) -> np.ndarray:
+def encode_frame_to_jpg(frame, quality: int = 75) -> np.ndarray:
     print("[encode_frame_to_jpg] encoding image to JPG")
-    success, encoded_image = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80]) # default compression is 95 https://stackoverflow.com/questions/40768621/python-opencv-jpeg-compression-in-memory
+    success, encoded_image = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), quality]) # default compression is 95 https://stackoverflow.com/questions/40768621/python-opencv-jpeg-compression-in-memory
     if not success:
         raise ValueError("Could not encode image")
     return encoded_image # numpy.ndarray
@@ -44,7 +44,7 @@ def video_frame_at_second(file_path, second) -> np.ndarray:
         return None
 
 def video_frame_generator(file_path, start_second=0, stop_second=None, interval_seconds=1):
-    print("[video_frame_generator] generating frames from {start_second}->{stop_second}, 1 frame per {interval_seconds} seconds")
+    print(f"[video_frame_generator] generating frames from {start_second}->{stop_second}, 1 frame per {interval_seconds} seconds")
     # --- open file
     video = cv2.VideoCapture(file_path)
     # --- get/set frames info
