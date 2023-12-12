@@ -24,7 +24,7 @@ audio_frame_rate = env_recording_frame_rate() # how do i get it to match!!?!!??
 audio_sample_rate = env_recording_sample_rate() # 44100 is norm but trying to trim file sizes. also timing is better
 audio_chunk = 1024
 # --- meta traits
-recording_segment_duration_sec = 60 * 1
+recording_segment_duration_sec = 60 * 2
 
 
 # PROCESSOR
@@ -36,14 +36,14 @@ def processor_recorder(pe, pq): # process_events, process_queues
             job_data = None
             # --- query (prioritized if flagged)
             if pe["event_is_recording_query"].is_set() == True:
-                if pq["queue_record_query"].qsize() > 0:
-                    job = pq["queue_record_query"].get()
+                if pq["queue_recorder_query"].qsize() > 0:
+                    job = pq["queue_recorder_query"].get()
                     job_type = job["type"]
                     job_data = job.get("data")
             # --- series
             elif pe["event_is_recording_series"].is_set() == True:
-                if pq["queue_record_series"].qsize() > 0:
-                    job = pq["queue_record_series"].get()
+                if pq["queue_recorder_series"].qsize() > 0:
+                    job = pq["queue_recorder_series"].get()
                     job_type = job["type"]
                     job_data = job.get("data")
             
@@ -107,12 +107,12 @@ def processor_recorder(pe, pq): # process_events, process_queues
             print(f"[processor_recorder] following up")
             # --- if this was a serial recording, and event says still recording, add next segment to queue (distinguished by segment_start_sec)
             if job_type == EVENT_TYPE_RECORD_SERIES and pe["event_is_recording_series"].is_set() == True:
-                pq["queue_record_series"].put({ "type": EVENT_TYPE_RECORD_SERIES, "data": { **job_data, "segment_start_sec": time.time() } })
+                pq["queue_recorder_series"].put({ "type": EVENT_TYPE_RECORD_SERIES, "data": { **job_data, "segment_start_sec": time.time() } })
             # --- send to processor_recorder_send
             if job_type == EVENT_TYPE_RECORD_SERIES:
-                pq["queue_send_recording"].put({ "type": EVENT_TYPE_SEND_SERIES_RECORDING, "data": { "file_path_h264": file_path_h264, "file_path_wav": file_path_wav, "file_path_mp4": file_path_mp4, "file_key_mp4": file_key_mp4 } })
+                pq["queue_sender"].put({ "type": EVENT_TYPE_SEND_SERIES_RECORDING, "data": { "file_path_h264": file_path_h264, "file_path_wav": file_path_wav, "file_path_mp4": file_path_mp4, "file_key_mp4": file_key_mp4, "series_id": job_data.get("series_id") } })
             if job_type == EVENT_TYPE_RECORD_QUERY:
-                pq["queue_send_recording"].put({ "type": EVENT_TYPE_SEND_QUERY_RECORDING, "data": { "file_path_h264": file_path_h264, "file_path_wav": file_path_wav, "file_path_mp4": file_path_mp4, "file_key_mp4": file_key_mp4 } })
+                pq["queue_sender"].put({ "type": EVENT_TYPE_SEND_QUERY_RECORDING, "data": { "file_path_h264": file_path_h264, "file_path_wav": file_path_wav, "file_path_mp4": file_path_mp4, "file_key_mp4": file_key_mp4, "series_id": job_data.get("series_id") } })
 
             # CLEAN
             # --- reset job type/data to not rerun

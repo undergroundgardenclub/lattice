@@ -4,8 +4,9 @@ import json
 import multiprocessing
 import threading
 import time
+from uuid import uuid4
 from utils_api import req_get_device_messages
-from utils_device import calculate_offset_seconds, EVENT_TYPE_PLAY_AUDIO, EVENT_TYPE_RECORD_SERIES, EVENT_TYPE_RECORD_QUERY, led_main, led_pattern, PIN_RECORD_BUTTON
+from utils_device import calculate_offset_seconds, EVENT_TYPE_PLAY_AUDIO, EVENT_TYPE_RECORD_SERIES, EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_RECORD_QUERY, led_main, led_pattern, PIN_RECORD_BUTTON
 from utils_files import get_file_bytes
 from utils_media import generate_media_id, play_audio
 
@@ -25,15 +26,17 @@ interaction_active = None
 # --- message listener
 DEVICE_MESSAGES_CHECK_WINDOW_TIME_SECS = 5
 device_messages_checked_last_at = 0 # int for less conditional logic
+# --- recording session helpers
+series_id = None # set/clear when triple tapping. going to set to a random uuid
 
 
 # TASKS
 # --- queues for data passing between processes
 process_queues = {
     "queue_messages": multiprocessing.Queue(),
-    "queue_record_query": multiprocessing.Queue(),
-    "queue_record_series": multiprocessing.Queue(),
-    "queue_send_recording": multiprocessing.Queue(),
+    "queue_recorder_query": multiprocessing.Queue(),
+    "queue_recorder_series": multiprocessing.Queue(),
+    "queue_sender": multiprocessing.Queue(),
 }
 # --- events dict for passing to sub-processes
 process_events = {
@@ -74,20 +77,23 @@ def interaction_press_double(pe, pq):
 # --- triple
 def interaction_press_triple(pe, pq):
     print('[interaction_press_triple] triggered')
+    global series_id
     if pe["event_is_recording_series"].is_set() == False: # start process if one doesn't exist
+        series_id = str(uuid4())
         now = time.time()
-        pq['queue_record_series'].put({ "type": EVENT_TYPE_RECORD_SERIES, "data": { "media_id": generate_media_id(), "start_sec": now, "segment_start_sec": now } })
+        pq['queue_recorder_series'].put({ "type": EVENT_TYPE_RECORD_SERIES, "data": { "media_id": generate_media_id(), "series_id": series_id, "start_sec": now, "segment_start_sec": now } })
         pe["event_is_recording_series"].set()
     else:
         pe["event_is_recording_series"].clear()
-        # TODO: trigger a job to summarize the series/session
-        
+        pq['queue_sender'].put({ "type": EVENT_TYPE_SEND_SERIES_DONE, "data": { "series_id": series_id } })
+        series_id = None
 
 # --- long press
 def interaction_press_long(pe, pq, is_button_pressed):
     print('[interaction_press_long] triggered', is_button_pressed)
+    global series_id
     if is_button_pressed == True and pe["event_is_recording_query"].is_set() == False:
-        pq['queue_record_query'].put({ "type": EVENT_TYPE_RECORD_QUERY, "data": { "media_id": generate_media_id(), "start_sec": time.time() } })
+        pq['queue_recorder_query'].put({ "type": EVENT_TYPE_RECORD_QUERY, "data": { "media_id": generate_media_id(), "series_id": series_id, "start_sec": time.time() } })
         pe["event_is_recording_query"].set()
     elif is_button_pressed == False and pe["event_is_recording_query"].is_set() == True:
         pe["event_is_recording_query"].clear()
