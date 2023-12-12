@@ -2,9 +2,11 @@ from adafruit_debouncer import Debouncer
 import digitalio
 import json
 import multiprocessing
+import threading
 import time
+from uuid import uuid4
 from utils_api import req_get_device_messages
-from utils_device import calculate_offset_seconds, led_pattern, PIN_RECORD_BUTTON
+from utils_device import calculate_offset_seconds, EVENT_TYPE_PLAY_AUDIO, EVENT_TYPE_RECORD_SERIES, EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_RECORD_QUERY, led_main, led_pattern, PIN_RECORD_BUTTON
 from utils_files import get_file_bytes
 from utils_media import generate_media_id, play_audio
 
@@ -24,90 +26,93 @@ interaction_active = None
 # --- message listener
 DEVICE_MESSAGES_CHECK_WINDOW_TIME_SECS = 5
 device_messages_checked_last_at = 0 # int for less conditional logic
-device_messages = []
+# --- recording session helpers
+series_id = None # set/clear when triple tapping. going to set to a random uuid
 
 
 # TASKS
 # --- queues for data passing between processes
 process_queues = {
-    "queue_messages": multiprocessing.Queue()
+    "queue_messages": multiprocessing.Queue(),
+    "queue_recorder_query": multiprocessing.Queue(),
+    "queue_recorder_series": multiprocessing.Queue(),
+    "queue_sender": multiprocessing.Queue(),
 }
 # --- events dict for passing to sub-processes
 process_events = {
-    "event_recording_stop": multiprocessing.Event(),
-    "event_recording_audio_stop": multiprocessing.Event(),
-    "event_recording_video_stop": multiprocessing.Event(),
+    "event_is_recording_series": multiprocessing.Event(), # events start is_set() == False
+    "event_is_recording_query": multiprocessing.Event(), # events start is_set() == False
 }
-# --- recording
-process_task_recording = None # if we have a process obj here, it's in motion
-def process_task_recording_fork(pe, media_id):
-    import task_recording # wrapper function so we only import in the new processor and don't have duplicate references
-    task_recording.task_recording(pe, media_id)
-# --- recording session
-process_task_recording_series = None # if we have a process obj here, it's in motion
-def process_task_recording_series_fork(pe, media_id):
-    import task_recording_series # wrapper function so we only import in the new processor and don't have duplicate references
-    task_recording_series.task_recording_series(pe, media_id)
-# --- query
-process_task_query = None # if we have a process obj here, it's in motion
-def process_task_query_fork(pe, media_id):
-    import task_query # wrapper function so we only import in the new processor and don't have duplicate references
-    task_query.task_query(pe, media_id)
+# --- processes: recording
+def processor_recorder_fork(pe, pq):
+    import processor_recorder
+    processor_recorder.processor_recorder(pe, pq)
+ps_processor_recorder = multiprocessing.Process(target=processor_recorder_fork, args=(process_events, process_queues))
+ps_processor_recorder.start()
+# --- processes: sending (doing a thread to leave processors open for load balancing/orchestrating. this isn't doing dedicated work)
+def processor_sender_fork(pe, pq):
+    import processor_sender
+    processor_sender.processor_sender(pe, pq)
+ps_processor_sender = threading.Thread(target=processor_sender_fork, args=(process_events, process_queues))
+ps_processor_sender.start()
+
 
 
 # INTERACTION FNS
 # --- single
-def interaction_press_single():
+def interaction_press_single(pe, pq):
     print('[interaction_press_single] triggered')
     led_pattern() # just for demoing/testing out. can't seem to trigger from other processes
 
 # --- double
-def interaction_press_double():
+def interaction_press_double(pe, pq):
     print('[interaction_press_double] triggered')
     led_pattern("error")
 
 # --- triple
-def interaction_press_triple():
+def interaction_press_triple(pe, pq):
     print('[interaction_press_triple] triggered')
-    global process_task_recording_series # means we can reach outside our functions scope
-    print(f'[interaction_press_double] recording: {"started" if process_task_recording_series == None else "stopping"}')
-    if process_task_recording_series == None: # start process if one doesn't exist
-        media_id = generate_media_id()
-        process_task_recording_series = multiprocessing.Process(target=process_task_recording_series_fork, args=(process_events, media_id))
-        process_task_recording_series.start()
+    global series_id
+    if pe["event_is_recording_series"].is_set() == False: # start process if one doesn't exist
+        series_id = str(uuid4())
+        now = time.time()
+        pq['queue_recorder_series'].put({ "type": EVENT_TYPE_RECORD_SERIES, "data": { "media_id": generate_media_id(), "series_id": series_id, "start_sec": now, "segment_start_sec": now } })
+        pe["event_is_recording_series"].set()
     else:
-        process_events['event_recording_stop'].set() # trigger stop event
-        process_task_recording_series.join() # TODO: instead of join() we need to iteratively check up on this so we don't block other interactions
-        process_events['event_recording_stop'].clear() # clear process reference. and "unset" which we are using for control flow (maybe start should be this way too rather than None)
-        process_task_recording_series = None
+        pe["event_is_recording_series"].clear()
+        pq['queue_sender'].put({ "type": EVENT_TYPE_SEND_SERIES_DONE, "data": { "series_id": series_id } })
+        series_id = None
 
 # --- long press
-def interaction_press_long(is_button_pressed):
+def interaction_press_long(pe, pq, is_button_pressed):
     print('[interaction_press_long] triggered', is_button_pressed)
-    global process_task_query
-    print(f'[interaction_press_double] query: {"started" if process_task_query == None else "stopping"}')
-    if is_button_pressed == True:
-        media_id = generate_media_id()
-        process_task_query = multiprocessing.Process(target=process_task_query_fork, args=(process_events, media_id))
-        process_task_query.start()
-    else:
-        process_events['event_recording_stop'].set()
-        process_task_query.join()  # TODO: instead of join() we need to iteratively check up on this so we don't block other interactions
-        process_events['event_recording_stop'].clear()
-        process_task_query = None
+    global series_id
+    if is_button_pressed == True and pe["event_is_recording_query"].is_set() == False:
+        pq['queue_recorder_query'].put({ "type": EVENT_TYPE_RECORD_QUERY, "data": { "media_id": generate_media_id(), "series_id": series_id, "start_sec": time.time() } })
+        pe["event_is_recording_query"].set()
+    elif is_button_pressed == False and pe["event_is_recording_query"].is_set() == True:
+        pe["event_is_recording_query"].clear()
 
 
-# LOOP
+# PROCESS
+# --- core 0 loop
 print('[main] LOOP')
 try:
     while True:
-        now = time.monotonic()
-        # --- peripheral: button
+        now = time.time()
+        # PERIPHERAL: SETUP
         button.update()
         is_button_pressed = not button.value
 
 
-        # PERIPHERAL INTERACTION PATTERN
+        # PERIPHERAL: LED (TODO: optimize so we're not constanly calling)
+        if process_events["event_is_recording_series"].is_set() == True or process_events["event_is_recording_query"].is_set() == True:
+            led_main.value = True
+        else:
+            led_main.value = False
+
+
+        # PERIPHERAL: BUTTON
         # --- listen for clicks
         if is_button_pressed and button_press_last_state == False:
             button_press_last_state = True
@@ -136,27 +141,27 @@ try:
 
         # --- run interaction (continues from state change above)
         if interaction_active == "press_single":
-            interaction_press_single()
+            interaction_press_single(process_events, process_queues)
             interaction_active = None
 
         elif interaction_active == "press_double":
-            interaction_press_double()
+            interaction_press_double(process_events, process_queues)
             interaction_active = None
 
         elif interaction_active == "press_triple":
-            interaction_press_triple()
+            interaction_press_triple(process_events, process_queues)
             interaction_active = None
 
         elif interaction_active == "press_long_start" and is_button_pressed:
-            interaction_press_long(is_button_pressed)
+            interaction_press_long(process_events, process_queues, is_button_pressed)
             interaction_active = "press_long_in_flight" # set new state so we don't continuously run this. the other will end
 
         elif interaction_active == "press_long_in_flight" and is_button_pressed == False:
-            interaction_press_long(is_button_pressed)
+            interaction_press_long(process_events, process_queues, is_button_pressed)
             interaction_active = None
 
 
-        # MESSAGES LISTENING
+        # MESSAGES LISTENING (TODO: move into a thread? prob unnecessary resource allocation)
         # --- fetch messages if any exist, add to queue
         if now - device_messages_checked_last_at >= DEVICE_MESSAGES_CHECK_WINDOW_TIME_SECS:
             device_messages_checked_last_at = now
@@ -173,9 +178,23 @@ try:
             next_message_data = json.loads(next_message.get("data"))
             print(f"[device_message] processing: {next_message_type}", next_message_data)
             # ... execute
-            if (next_message_type == "play_audio"):
+            if (next_message_type == EVENT_TYPE_PLAY_AUDIO):
                 audio_bytes = get_file_bytes(next_message_data.get("file_url"))
                 play_audio(audio_bytes, is_blocking=False)
+
+
+        # PROCESS HEALTH CHECKS
+        # --- ensure processors are still running (check if we can just start() or we need to redefine)
+        if ps_processor_recorder.is_alive() == False:
+            print("[loop] 'ps_processor_recorder' dead, starting again")
+            ps_processor_recorder = multiprocessing.Process(target=processor_recorder_fork, args=(process_events, process_queues))
+            ps_processor_recorder.start()
+            led_pattern("error")
+        if ps_processor_sender.is_alive() == False:
+            print("[loop] 'ps_processor_sender' dead, starting again")
+            ps_processor_sender = threading.Thread(target=processor_sender_fork, args=(process_events, process_queues))
+            ps_processor_sender.start()
+            led_pattern("error")
 
 
         time.sleep(0.01)  # Small delay to debounce and reduce CPU usage

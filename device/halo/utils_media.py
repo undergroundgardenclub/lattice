@@ -13,6 +13,7 @@ def convert_h264_to_mp4(input_file: str, output_file: str, frame_rate: int):
     subprocess.run(command)
 
 def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_path):
+    print(f"[combine_h264_and_wav_into_mp4] video: {video_file_path} + audio: {audio_file_path} = mp4 {output_file_path}")
     # --- calc offset since multiprocess
     offset = calculate_offset_seconds(
         read_file_json(video_file_path + '.json')['start_time_sec'],
@@ -34,21 +35,22 @@ def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_
         '-map', '1:a:0', # for offset, apply change to audio
         output_file_path
     ]
+    print("[combine_h264_and_wav_into_mp4] command: ", command)
     subprocess.run(command, check=True)
 
 # MEDIA
 # --- ids
-def generate_media_id():
+def generate_media_id() -> str:
     return f"{env_device_id()}-{int(time.time())}"
 
 # --- keys/paths # TODO: could make this kargs spread for joining many props
-def get_media_key(media_id, media_format, media_chunk_num = None):
-    if media_chunk_num == None:
+def get_media_key(media_id, media_format, segment_id = None):
+    if segment_id == None:
         return f"{media_id}.{media_format}"
-    return f"{media_id}--{media_chunk_num}.{media_format}"
+    return f"{media_id}--{segment_id}.{media_format}"
 
-def get_media_local_file_path(media_id, media_format, media_chunk_num = None):
-    return f"{env_directory_data()}/{get_media_key(media_id, media_format, media_chunk_num)}"
+def get_media_local_file_path(media_id, media_format, segment_id = None):
+    return f"{env_directory_data()}/{get_media_key(media_id, media_format, segment_id)}"
 
 
 # AUDIO

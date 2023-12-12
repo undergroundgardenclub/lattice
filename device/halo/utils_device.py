@@ -3,9 +3,19 @@ import digitalio
 import time
 from typing import Optional
 
+
 # PINS
 PIN_RECORD_BUTTON = board.D14
 PIN_LED = board.D23
+
+
+# EVENT ENUMS
+EVENT_TYPE_PLAY_AUDIO = "play_audio"
+EVENT_TYPE_RECORD_SERIES = "record_series"
+EVENT_TYPE_RECORD_QUERY = "record_query"
+EVENT_TYPE_SEND_SERIES_RECORDING = "send_series_recording"
+EVENT_TYPE_SEND_SERIES_DONE = "send_series_done"
+EVENT_TYPE_SEND_QUERY_RECORDING = "send_query_recording"
 
 
 # IDs

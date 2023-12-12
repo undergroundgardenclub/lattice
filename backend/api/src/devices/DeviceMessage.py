@@ -11,6 +11,7 @@ class DeviceMessage(BaseModel):
     data = Column(JSONB())
     created_at = Column(DateTime(timezone=True))
     delivered_at = Column(DateTime(timezone=True))
+
     def serialize(self, serialize_relationships=[]):
         return {
             "id": self.id,

@@ -13,7 +13,7 @@ from env import env_target_service
 # Maybe one day we multiprocess api/workers
 if __name__ == "__main__":
     service = env_target_service()
-    print("INFO (start.py) start: ", service)
+    print("[start] service: ", service)
     # --- worker api (using bull, not sanic's worker system so workers can use other languages)
     if service == 'worker_api':
         start_worker()
