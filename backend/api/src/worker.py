@@ -1,8 +1,8 @@
 import asyncio
 from bullmq import Job, Queue, Worker
 from env import env_queue_host, env_queue_port
-from intake.jobs.job_intake_recording import job_intake_recording
 from intake.jobs.job_intake_recording_series import job_intake_recording_series
+from intake.jobs.job_intake_recording_series_done import job_intake_recording_series_done
 from intake.jobs.job_intake_query import job_intake_query
 
 # SETUP
@@ -16,9 +16,8 @@ worker_opts = { "maxStalledCount": 0 }
 
 # QUEUES
 queues = dict(
-    # --- intake
-    intake_recording=Queue("intake_recording", redis_opts),
     intake_recording_series=Queue("intake_recording_series", redis_opts),
+    intake_recording_series_done=Queue("intake_recording_series_done", redis_opts),
     intake_query=Queue("intake_query", redis_opts),
 )
 
@@ -41,8 +40,8 @@ async def queue_add_job(queue, job_data: dict, job_opts: dict = {}) -> Job:
 # WORK
 async def work():
     # --- intake recording
-    w_intake_recording = Worker("intake_recording", pw(job_intake_recording), { **worker_opts, "connection": redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
-    w_intake_recording = Worker("intake_recording_series", pw(job_intake_recording_series), { **worker_opts, "connection": redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
+    w_intake_recording_series = Worker("intake_recording_series", pw(job_intake_recording_series), { **worker_opts, "connection": redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
+    w_intake_recording_series_done = Worker("intake_recording_series_done", pw(job_intake_recording_series_done), { **worker_opts, "connection": redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
     # --- intake query
     w_intake_query = Worker("intake_query", pw(job_intake_query), { **worker_opts, "connection": redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
     # ... keep workers alive
