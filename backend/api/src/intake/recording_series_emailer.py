@@ -2,7 +2,7 @@ import math
 import numpy as np
 from emails.fill_email_template_html import fill_email_template_html_tasks_summary
 from emails.send_email import send_email
-from intake.recording_series_manager import RecordingSeriesManager
+from intake.RecordingSeriesManager import RecordingSeriesManager
 from llms.prompts import prompt_recording_transcript_to_task_headers, prompt_recording_transcript_to_task_outline
 from vision.clip import clip_encode, clip_similarity
 from vision.cv import encode_frame_to_jpg, video_frame_generator
