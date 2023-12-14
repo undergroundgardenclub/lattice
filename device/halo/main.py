@@ -5,7 +5,8 @@ import multiprocessing
 import threading
 import time
 from uuid import uuid4
-from utils_api import req_get_device_messages
+from env import env_device_id
+from utils_api import req_get_device_messages, req_tracking_event
 from utils_device import calculate_offset_seconds, EVENT_TYPE_PLAY_AUDIO, EVENT_TYPE_RECORD_SERIES, EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_RECORD_QUERY, led_main, led_pattern, PIN_RECORD_BUTTON
 from utils_files import get_file_bytes
 from utils_media import generate_media_id, play_audio
@@ -94,7 +95,11 @@ def interaction_press_long(pe, pq, is_button_pressed):
         pe["event_is_recording_query"].clear()
 
 
-# PROCESS
+# START PROCESS
+# --- blink to signal we've starting
+led_pattern()
+# --- save event about boot up
+req_tracking_event({ "type": "device_boot", "data": {} })
 # --- core 0 loop
 print('[main] LOOP')
 try:
@@ -201,3 +206,4 @@ try:
 except Exception as error:
     print("[loop] error: ", error)
     led_pattern("error")
+    req_tracking_event({ "type": "device_exception", "data": {} })

@@ -17,17 +17,6 @@ def req_recording_series_submit(file: dict, series_id: str):
         print("[req_recording_series_submit] error: ", err)
         return
 
-def req_recording_series_done(series_id: str):
-    print("[req_recording_series_done] sending recording")
-    try:
-        response = requests.post(env_api_url() + "/v1/intake/recording/series/done", data=json.dumps({ "device_id": env_device_id(), "series_id": series_id }))
-        response_json = response.json()
-        print('[req_recording_series_done] response: ', response_json)
-        return
-    except Exception as err:
-        print("[req_recording_series_done] error: ", err)
-        return
-
 
 # QUERY
 def req_query(query_file: dict, series_id: str = None):
@@ -55,3 +44,14 @@ def req_get_device_messages():
     except Exception as err:
         print("[req_get_device_messages] error: ", err)
         return []
+
+
+# EVENTS
+def req_tracking_event(event: dict) -> None:
+    try:
+        print("[req_tracking_event] => ", event)
+        response = requests.post(env_api_url() + "/v1/tracking/event", data=json.dumps({ "event": { "device_id": env_device_id(), **event } }))
+        return
+    except Exception as err:
+        print("[req_get_device_messages] error: ", err)
+        return

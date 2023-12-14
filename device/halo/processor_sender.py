@@ -1,6 +1,6 @@
 import json
 import time
-from utils_api import req_query, req_recording_series_submit, req_recording_series_done
+from utils_api import req_query, req_recording_series_submit, req_tracking_event
 from utils_device import EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_SEND_SERIES_RECORDING, EVENT_TYPE_SEND_QUERY_RECORDING
 from utils_files import delete_file, store_file_from_path, get_stored_file_url
 from utils_media import combine_h264_and_wav_into_mp4, get_media_local_file_path, get_media_key
@@ -23,7 +23,7 @@ def processor_sender(process_events, process_queues):
             print(f"[processor_sender] {job_type} =", job_data)
             # --- api pings
             if job_type == EVENT_TYPE_SEND_SERIES_DONE:
-                    req_recording_series_done(series_id=job_data.get("series_id"))
+                    req_tracking_event({ "type": "series_done", "data": { "series_id": job_data.get("series_id") } })
 
             # --- file/recording handling
             if job_type == EVENT_TYPE_SEND_QUERY_RECORDING or job_type == EVENT_TYPE_SEND_SERIES_RECORDING:

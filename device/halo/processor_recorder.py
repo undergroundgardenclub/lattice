@@ -1,4 +1,5 @@
 import json
+import logging
 from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder, Quality
 import pyaudio
@@ -29,7 +30,7 @@ recording_segment_duration_sec = 60 * 2
 
 # PROCESSOR
 def processor_recorder(pe, pq): # process_events, process_queues
-    print('[processor_recorder] fork')
+    logging.info('[processor_recorder] fork')
     while True:
         try:
             job_type = None
@@ -51,7 +52,7 @@ def processor_recorder(pe, pq): # process_events, process_queues
             # --- if no job, skip
             if job_type == None or job_data == None:
                 continue
-            print(f"[processor_recorder] recording: {job_type}", job_data)
+            logging.info(f"[processor_recorder] recording: {job_type}", job_data)
             media_id = job_data.get("media_id")
             segment_start_sec = job_data.get("segment_start_sec", time.time())
             file_key_mp4 = get_media_key(media_id, "mp4", int(segment_start_sec))
@@ -64,7 +65,7 @@ def processor_recorder(pe, pq): # process_events, process_queues
                 picam2_config = picam2.create_video_configuration({ "size": video_size }, controls={ "FrameDurationLimits": (video_frame_duration_limit, video_frame_duration_limit) })
                 picam2.configure(picam2_config)
                 # --- record!... until...
-                picam2.start_recording(video_encoder, output=file_path_h264, quality=Quality.LOW)
+                picam2.start_recording(video_encoder, output=file_path_h264, quality=Quality.MEDIUM) # 2 min clips w/ LOW were ~14MB. Going to bump
                 video_start_time_sec = time.time()
                 
                 # RECORD: AUDIO
@@ -104,7 +105,7 @@ def processor_recorder(pe, pq): # process_events, process_queues
 
 
             # FOLLOWUP ACTION
-            print(f"[processor_recorder] following up")
+            logging.info(f"[processor_recorder] following up")
             # --- if this was a serial recording, and event says still recording, add next segment to queue (distinguished by segment_start_sec)
             if job_type == EVENT_TYPE_RECORD_SERIES and pe["event_is_recording_series"].is_set() == True:
                 pq["queue_recorder_series"].put({ "type": EVENT_TYPE_RECORD_SERIES, "data": { **job_data, "segment_start_sec": time.time() } })
@@ -120,7 +121,7 @@ def processor_recorder(pe, pq): # process_events, process_queues
             job_data = None
 
         except Exception as err:
-            print('[processor_recorder] error: ', err)
+            logging.info('[processor_recorder] error: ', err)
 
         # --- slight pause to slow cpu cycles
         time.sleep(0.01)
