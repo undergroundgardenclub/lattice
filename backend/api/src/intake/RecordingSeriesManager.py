@@ -1,6 +1,7 @@
 import os
 from typing import List
-from file.file_cloud_storage import get_stored_file_bytes
+from uuid import uuid4
+from file.file_cloud_storage import get_stored_file_bytes, get_stored_file_url, store_file_from_path
 from file.file_utils import merge_media_files, tmp_file_path, tmp_file_rmv, tmp_file_set
 from intake.Recording import Recording
 from voice.speech_to_text import speech_to_text
@@ -14,7 +15,8 @@ class RecordingSeriesManager():
     transcripts_text: str = ""
     transcripts_sentences = []
     # --- extras loading/processing
-    series_recording_file_path = None
+    series_recording_file_path: str = None
+    series_recording_file_url: str = None
 
     # LOADERRS
     # --- transcripts/recordings
@@ -68,3 +70,14 @@ class RecordingSeriesManager():
             print(f"Removed series recording file: {self.series_recording_file_path}")
         # --- clear reference
         self.series_recording_file_path = None
+
+    # --- series recording upload
+    def store_series_recording(self) -> str:
+        print("[store_series_recording] start")
+        # --- upload to S3
+        series_recording_file_key = f"{uuid4()}.mp4"
+        store_file_from_path(self.series_recording_file_path, series_recording_file_key)
+        # --- set URL for easy reference
+        self.series_recording_file_url = get_stored_file_url(series_recording_file_key)
+        # --- return
+        return series_recording_file_key
