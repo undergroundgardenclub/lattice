@@ -101,14 +101,14 @@ def prompt_query_help_manual():
 
 # TRANSCRIPTS
 # --- header/steps
-def prompt_recording_transcript_to_task_headers(transcript: str) -> List[str]:
+def prompt_recording_transcript_to_task_headers(input_text_transcript: str) -> List[str]:
     # query
     response = openai_client.chat.completions.create(
         model="gpt-4-1106-preview",
         response_format={ "type": "json_object" },
         messages=[
             { "role": "system", "content": "You are a helpful lab assistant designed to output JSON of a protocol with the schema, { protocolTaskHeaders: string[] }. Given an audio transcript, list out the headlines for this protocol. Details are not for this step. Example) { protocolTaskHeaders: ['Gather Reagents', 'Heat Shock Plasmids into E.Coli', 'Plate Cells', 'Incubate Cells'] }" },
-            { "role": "user", "content": transcript }
+            { "role": "user", "content": input_text_transcript }
         ],
         temperature=0.2,
     )
