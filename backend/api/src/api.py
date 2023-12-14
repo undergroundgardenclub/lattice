@@ -5,6 +5,7 @@ from sanic_cors import CORS
 import env
 from devices.routes import blueprint_devices
 from intake.routes import blueprint_intake
+from tracking.routes import blueprint_tracking
 from middleware.error_handler import APIErrorHandler
 from orm import sa_sessionmaker
 
@@ -42,6 +43,8 @@ def app_route_health(_):
 api_app.blueprint(blueprint_devices)
 # --- intake (streams/recordings/queries)
 api_app.blueprint(blueprint_intake)
+# --- tracking (events)
+api_app.blueprint(blueprint_tracking)
 
 
 # RUN

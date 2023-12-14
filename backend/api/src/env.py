@@ -43,6 +43,10 @@ def env_database_app_url(driver="asyncpg"):
 def env_eleven_labs_api_key():
     return _env_getter('ELEVENT_LABS_API_KEY')
 
+# EMAIL
+def env_email_to_test():
+    return _env_getter("EMAIL_TEST_TO")
+
 # ENV
 def env_target_service() -> str: # 'api' or 'worker_api'
     return _env_getter('TARGET_SERVICE')

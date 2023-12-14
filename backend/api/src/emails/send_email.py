@@ -1,8 +1,8 @@
 from sendgrid import SendGridAPIClient
 from typing import List
-from env import env_sendgrid_api_key
+from env import env_sendgrid_api_key, env_email_to_test
 
-from_email = "x@markthemark.com"
+from_email = env_email_to_test()
 
 def send_email(to_emails: List[str], subject: str, html: str, files: List = []) -> None:
     print(f"[send_email] to: ", to_emails)

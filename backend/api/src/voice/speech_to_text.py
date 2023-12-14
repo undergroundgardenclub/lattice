@@ -37,7 +37,7 @@ def speech_to_text(file_url: Optional[str] = None, transcript_id: Optional[str] 
         if transcript_check_response.json()['status'] == 'error':
             print("[speech_to_text] error", transcript_check_response.json())
             raise transcript_check_response.json()
-        sleep(2)
+        sleep(1)
         
     # PROCESS (crude words -> sentences + full text construction)
     print(f"[speech_to_text] processing {t_id}") # transcript_response
