@@ -1,3 +1,4 @@
+import logging
 from pygame import mixer
 import subprocess
 import time
@@ -13,7 +14,7 @@ def convert_h264_to_mp4(input_file: str, output_file: str, frame_rate: int):
     subprocess.run(command)
 
 def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_path):
-    print(f"[combine_h264_and_wav_into_mp4] video: {video_file_path} + audio: {audio_file_path} = mp4 {output_file_path}")
+    logging.info("[combine_h264_and_wav_into_mp4] video: %s + audio: %s = mp4 %s", video_file_path, audio_file_path, output_file_path)
     # --- calc offset since multiprocess
     offset = calculate_offset_seconds(
         read_file_json(video_file_path + '.json')['start_time_sec'],
@@ -35,7 +36,7 @@ def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_
         '-map', '1:a:0', # for offset, apply change to audio
         output_file_path
     ]
-    print("[combine_h264_and_wav_into_mp4] command: ", command)
+    logging.info("[combine_h264_and_wav_into_mp4] command: ", command)
     subprocess.run(command, check=True)
 
 # MEDIA
@@ -58,7 +59,7 @@ AUDIO_CHANNEL_MAIN = 0
 # AUDIO_CHANNEL_NOTIFICATIONS = 1 # maybe notifs on separate channel so it can play w/o interrupting main audio
 
 def play_audio(audio_bytes, is_blocking: bool, channel = AUDIO_CHANNEL_MAIN):
-    print(f"[play_audio] playing (is_blocking = {is_blocking})")
+    logging.info("[play_audio] playing")
     mixer.init()
     # --- create sound
     sound = mixer.Sound(audio_bytes)
@@ -68,7 +69,7 @@ def play_audio(audio_bytes, is_blocking: bool, channel = AUDIO_CHANNEL_MAIN):
     channel.play(sound, loops=0)
     # --- wait till done playing sound before returning (needed seomtimes bc a process exit stops sound)
     if is_blocking:
-        print("[play_audio] busy/blocking")
+        logging.info("[play_audio] busy/blocking")
         while channel.get_busy():
             continue
-    print("[play_audio] done")
+    logging.info("[play_audio] done")

@@ -1,5 +1,6 @@
 import board
 import digitalio
+import logging
 import time
 from typing import Optional
 
@@ -40,7 +41,7 @@ led_main = digitalio.DigitalInOut(PIN_LED)
 led_main.direction = digitalio.Direction.OUTPUT
 
 def led_pattern(pattern_type: str = None):
-    print(f'[led_pattern] {pattern_type}')
+    logging.info("[led_pattern] %s", pattern_type)
     # --- get current state (ex: if its on for a recording)
     current_led_state = led_main.value
     # --- set pattern
@@ -62,5 +63,5 @@ def led_pattern(pattern_type: str = None):
 # TIMERS
 def calculate_offset_seconds(earlier_sec, later_sec_at):
     offset = later_sec_at - earlier_sec
-    # print(f"[calculate_offset_seconds] {later_sec_at} - {earlier_sec} = {offset}") # processes run this alot so hiding
+    # logging.info(f"[calculate_offset_seconds] {later_sec_at} - {earlier_sec} = {offset}") # processes run this alot so hiding
     return offset

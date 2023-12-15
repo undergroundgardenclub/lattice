@@ -52,7 +52,7 @@ def processor_recorder(pe, pq): # process_events, process_queues
             # --- if no job, skip
             if job_type == None or job_data == None:
                 continue
-            logging.info(f"[processor_recorder] recording: {job_type}", job_data)
+            logging.info("[processor_recorder] recording: %s %s", job_type, job_data)
             media_id = job_data.get("media_id")
             segment_start_sec = job_data.get("segment_start_sec", time.time())
             file_key_mp4 = get_media_key(media_id, "mp4", int(segment_start_sec))
@@ -71,6 +71,7 @@ def processor_recorder(pe, pq): # process_events, process_queues
                 # RECORD: AUDIO
                 audio = pyaudio.PyAudio()
                 audio_frames = []
+                # --- open stream
                 audio_stream = audio.open(format=audio_format, channels=audio_channels, rate=audio_sample_rate, input=True, frames_per_buffer=audio_chunk)
                 audio_start_time_sec = time.time()
                 
@@ -121,7 +122,7 @@ def processor_recorder(pe, pq): # process_events, process_queues
             job_data = None
 
         except Exception as err:
-            logging.info('[processor_recorder] error: ', err)
+            logging.info('[processor_recorder] error: %s', err)
 
         # --- slight pause to slow cpu cycles
         time.sleep(0.01)

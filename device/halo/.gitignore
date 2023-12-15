@@ -6,7 +6,10 @@ __pycache__
 Raspberry-Pi-Installer-Scripts
 i2smic.py
 .lgd**
+
+# logs
 **/*.log
+!logs/.gitkeep
 
 # files/media
 data/**
