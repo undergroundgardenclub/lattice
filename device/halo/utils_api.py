@@ -50,7 +50,7 @@ def req_get_device_messages():
 # EVENTS
 def req_tracking_event(event: dict) -> None:
     try:
-        logging.info("[req_tracking_event] => ", event)
+        logging.info("[req_tracking_event] => %s", event)
         response = requests.post(env_api_url() + "/v1/tracking/event", data=json.dumps({ "event": { "device_id": env_device_id(), **event } }))
         return
     except Exception as err:

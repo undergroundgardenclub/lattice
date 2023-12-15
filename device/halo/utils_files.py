@@ -8,7 +8,7 @@ from env import env_aws_access_key_id, env_aws_secret_access_key, env_aws_s3_fil
 
 # DEVICE-LEVEL
 def get_file_bytes(path_or_url: str):
-    logging.info("[get_file_bytes] fetching file -> bytes: ", path_or_url)
+    logging.info("[get_file_bytes] fetching file -> bytes: %s", path_or_url)
     is_url = path_or_url.startswith("http")
     # ... fetch/download to bytes (aka we're in memory)
     if is_url == True:

@@ -207,7 +207,7 @@ while True:
 
         time.sleep(0.01)  # Small delay to debounce and reduce CPU usage
     except Exception as loop_err:
-        logging.info("[loop] error: ", loop_err)
+        logging.error("[loop] error: %s", loop_err)
         led_pattern("error")
         req_tracking_event({ "type": "device_exception", "data": {} })
 

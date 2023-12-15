@@ -7,4 +7,4 @@ cd /home/pi/lattice/device/halo
 source .venv/bin/activate
 
 # --- start 
-python /home/pi/lattice/device/halo/main.py
+python -u /home/pi/lattice/device/halo/main.py
