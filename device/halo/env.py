@@ -35,7 +35,7 @@ def env_recording_frame_rate():
     return 15 # 15 seems like it has the least drift
 
 def env_recording_sample_rate():
-    return 44100
+    return 48000 # 44100 somehow is not acceptable for the PortAudio lib, I think it may be related to device? https://discourse.psychopy.org/t/sound-engine-ptb-causes-sampling-rate-error/26095
 
 # SERVICES
 def env_api_url():
