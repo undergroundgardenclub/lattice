@@ -1,6 +1,7 @@
 from adafruit_debouncer import Debouncer
 import digitalio
 import json
+import logging
 import multiprocessing
 import threading
 import time
@@ -13,7 +14,9 @@ from utils_media import generate_media_id, play_audio
 
 
 # SETUP
-print('[main] SETUP')
+# --- logging
+logging.basicConfig(filename='/home/pi/lattice/device/halo/logs/halo.log', level=logging.DEBUG)
+logging.info('[main] SETUP')
 # --- peripherals (maybe should be global references for control overrides by subprocesses?)
 button_input = digitalio.DigitalInOut(PIN_RECORD_BUTTON)
 button_input.switch_to_input(pull=digitalio.Pull.UP) # if button pressed, button.fell = True
@@ -62,17 +65,17 @@ ps_processor_sender.start()
 # INTERACTION FNS
 # --- single
 def interaction_press_single(pe, pq):
-    print('[interaction_press_single] triggered')
+    logging.info('[interaction_press_single] triggered')
     led_pattern() # just for demoing/testing out. can't seem to trigger from other processes
 
 # --- double
 def interaction_press_double(pe, pq):
-    print('[interaction_press_double] triggered')
+    logging.info('[interaction_press_double] triggered')
     led_pattern("error")
 
 # --- triple
 def interaction_press_triple(pe, pq):
-    print('[interaction_press_triple] triggered')
+    logging.info('[interaction_press_triple] triggered')
     global series_id
     if pe["event_is_recording_series"].is_set() == False: # start process if one doesn't exist
         series_id = str(uuid4())
@@ -86,7 +89,7 @@ def interaction_press_triple(pe, pq):
 
 # --- long press
 def interaction_press_long(pe, pq, is_button_pressed):
-    print('[interaction_press_long] triggered', is_button_pressed)
+    logging.info('[interaction_press_long] triggered: %s', is_button_pressed)
     global series_id
     if is_button_pressed == True and pe["event_is_recording_query"].is_set() == False:
         pq['queue_recorder_query'].put({ "type": EVENT_TYPE_RECORD_QUERY, "data": { "media_id": generate_media_id(), "series_id": series_id, "start_sec": time.time() } })
@@ -95,15 +98,15 @@ def interaction_press_long(pe, pq, is_button_pressed):
         pe["event_is_recording_query"].clear()
 
 
-# START PROCESS
+# EXEC
+logging.info('[main] LOOP')
 # --- blink to signal we've starting
 led_pattern()
 # --- save event about boot up
 req_tracking_event({ "type": "device_boot", "data": {} })
-# --- core 0 loop
-print('[main] LOOP')
-try:
-    while True:
+# --- loop
+while True:
+    try:
         now = time.time()
         # PERIPHERAL: SETUP
         button.update()
@@ -181,7 +184,7 @@ try:
             next_message = process_queues["queue_messages"].get()
             next_message_type = next_message["type"]
             next_message_data = json.loads(next_message.get("data"))
-            print(f"[device_message] processing: {next_message_type}", next_message_data)
+            logging.info("[device_message] processing: %s %s", next_message_type, next_message_data)
             # ... execute
             if (next_message_type == EVENT_TYPE_PLAY_AUDIO):
                 audio_bytes = get_file_bytes(next_message_data.get("file_url"))
@@ -191,19 +194,20 @@ try:
         # PROCESS HEALTH CHECKS
         # --- ensure processors are still running (check if we can just start() or we need to redefine)
         if ps_processor_recorder.is_alive() == False:
-            print("[loop] 'ps_processor_recorder' dead, starting again")
+            logging.info("[loop] 'ps_processor_recorder' dead, starting again")
             ps_processor_recorder = multiprocessing.Process(target=processor_recorder_fork, args=(process_events, process_queues))
             ps_processor_recorder.start()
             led_pattern("error")
         if ps_processor_sender.is_alive() == False:
-            print("[loop] 'ps_processor_sender' dead, starting again")
+            logging.info("[loop] 'ps_processor_sender' dead, starting again")
             ps_processor_sender = threading.Thread(target=processor_sender_fork, args=(process_events, process_queues))
             ps_processor_sender.start()
             led_pattern("error")
 
 
         time.sleep(0.01)  # Small delay to debounce and reduce CPU usage
-except Exception as error:
-    print("[loop] error: ", error)
-    led_pattern("error")
-    req_tracking_event({ "type": "device_exception", "data": {} })
+    except Exception as loop_err:
+        logging.info("[loop] error: ", loop_err)
+        led_pattern("error")
+        req_tracking_event({ "type": "device_exception", "data": {} })
+
