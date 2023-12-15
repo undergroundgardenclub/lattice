@@ -15,11 +15,10 @@ openai_client = OpenAI(api_key=env_open_ai_api_key())
 # --- tool/action requests
 class QueryTools:
     def __init__(self):
-        # TODO: this feels a little weird but w/e
         self.tools = {
             "send_recording_series_summary_email": {
                 "name": "send_recording_series_summary_email",
-                "description": "Get an email sent to you about recordings you've done today or yesterday",
+                "description": "Get an email sent to you about recordings you've done today or yesterday.",
                 "schema": {
                     "type": "object",
                     "properties": {
@@ -30,7 +29,7 @@ class QueryTools:
             },
             "send_video_series_slice": {
                 "name": "send_video_series_slice",
-                "description": "Get an email of a recording that covers some number of prior minutes or hours",
+                "description": "Get a recording that covers some number of minutes or hours.",
                 "schema": {
                     "type": "object",
                     "properties": {
@@ -46,7 +45,7 @@ class QueryTools:
             },
             "help_manual_about_tool": {
                 "name": "help_manual_about_tool",
-                "description": "Learn about this device's functionality and what spoken commands it accepts",
+                "description": "Learn about this device's functionality and what spoken commands it accepts.",
                 "schema": { "type": "object", "properties": {} }
             },
             "other": {
@@ -71,7 +70,6 @@ def prompt_query_action(input_text: str):
         temperature=0.2,
         max_tokens=400,
     )
-    print(response)
     # parse response
     data = json.loads(response.choices[0].message.content)
     tool_name = data['toolName']
