@@ -34,7 +34,7 @@ def req_query(query_file: dict, series_id: str = None):
 
 # DEVICE MESSAGES
 def req_get_device_messages():
-    logging# .info("[req_get_device_messages] checking device messages") # kinda spammy
+    logging.debug("[req_get_device_messages] checking device messages") # kinda spammy
     try:
         response = requests.get(env_api_url() + "/v1/device/messages", data=json.dumps({ "device_id": env_device_id() }))
         response_json = response.json()

@@ -1,10 +1,12 @@
 import logging
-from pygame import mixer
+import pygame
+import pygame._sdl2.audio as sdl2_audio
 import subprocess
 import time
+from typing import Tuple
 from env import env_device_id, env_directory_data, env_recording_frame_rate, env_recording_sample_rate
 from utils_device import calculate_offset_seconds
-from utils_files import read_file_json
+from utils_files import read_file_json, tmp_file_rmv, tmp_file_set
 
 
 # FFMPEG
@@ -58,18 +60,33 @@ def get_media_local_file_path(media_id, media_format, segment_id = None):
 AUDIO_CHANNEL_MAIN = 0
 # AUDIO_CHANNEL_NOTIFICATIONS = 1 # maybe notifs on separate channel so it can play w/o interrupting main audio
 
+# --- play
+# def play_audio(audio_bytes, is_blocking: bool, channel = AUDIO_CHANNEL_MAIN):
+#     logging.info("[play_audio] playing")
+#     pygame.mixer.init()
+#     # --- create sound
+#     sound = pygame.mixer.Sound(audio_bytes)
+#     # --- create channel + play
+#     channel = pygame.mixer.Channel(channel) # must provide id. in the future may need to manage this if doing audio playback + notifications sounds
+#     channel.set_volume(0.75)
+#     channel.play(sound, loops=0)
+#     # --- wait till done playing sound before returning (needed seomtimes bc a process exit stops sound)
+#     if is_blocking:
+#         logging.info("[play_audio] busy/blocking")
+#         while channel.get_busy():
+#             continue
+#     logging.info("[play_audio] done")
+
 def play_audio(audio_bytes, is_blocking: bool, channel = AUDIO_CHANNEL_MAIN):
-    logging.info("[play_audio] playing")
-    mixer.init()
-    # --- create sound
-    sound = mixer.Sound(audio_bytes)
-    # --- create channel + play
-    channel = mixer.Channel(channel) # must provide id. in the future may need to manage this if doing audio playback + notifications sounds
-    channel.set_volume(0.75)
-    channel.play(sound, loops=0)
-    # --- wait till done playing sound before returning (needed seomtimes bc a process exit stops sound)
-    if is_blocking:
-        logging.info("[play_audio] busy/blocking")
-        while channel.get_busy():
-            continue
-    logging.info("[play_audio] done")
+    logging.info("[play_audio] play")
+    tmp_file_path = tmp_file_set(audio_bytes.read(), file_extension="mp3")
+    try:
+        # logging.info("[play_audio] audio file: %s", tmp_file_path)
+        # song = AudioSegment.from_file(tmp_file_path, format="mp3")
+        # logging.info("[play_audio] audio details: %s", song)
+        # subprocess.run(['ffplay', '-devices'])
+        # play(song) # , num_channels=0, bytes_per_sample=16, sample_rate=44100
+        subprocess.run(['ffplay', '-nodisp', '-autoexit', tmp_file_path])
+    finally:
+        tmp_file_rmv(tmp_file_path)
+
