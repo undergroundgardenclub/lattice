@@ -1,22 +1,11 @@
 #!/bin/bash
 
-# NOT IN USE: Kept for reference if needed later
-# Made this script to setup boot scripts/files. RUN WITH SUDO
-
-# MANUAL TODOS
-# --- disabling pulseaudio, which conflicts with pyaudio (https://learn.foundry.com/nuke/content/timeline_environment/managetimelines/audio_pulse.html)
-echo "[setupd.sh] pulse audio config needs editing, autospawn should equal 'no'."
-cat /etc/pulse/client.conf | grep autospawn
-pulseaudio --kill
+# SETUP: systemd setup scripts (run w/ sudo)
 
 # dependencies
-# --- set virtual env
+# --- init virtual env
 echo "[setupd.sh] .venv"
 source .venv/bin/activate
-# --- linux deps??? (fix audio output issues when using systemd)
-# --- python (can comment/uncomment to speed up restart)
-echo "[setupd.sh] pip install"
-# pip install -r requirements.txt
 
 # start.sh
 # --- make start.sh executable

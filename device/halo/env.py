@@ -18,7 +18,7 @@ def env_aws_access_key_id():
 def env_aws_secret_access_key():
     return _env_getter('AWS_SECRET_ACCESS_KEY')
 def env_aws_s3_files_bucket():
-    return _env_getter('AWS_FILES_BUCKET')
+    return _env_getter('AWS_BUCKET_FILES')
 
 # DEVICE
 def env_device_id():
