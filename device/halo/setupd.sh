@@ -13,6 +13,7 @@ pulseaudio --kill
 # --- set virtual env
 echo "[setupd.sh] .venv"
 source .venv/bin/activate
+# --- linux deps??? (fix audio output issues when using systemd)
 # --- python (can comment/uncomment to speed up restart)
 echo "[setupd.sh] pip install"
 # pip install -r requirements.txt
@@ -31,7 +32,7 @@ Description=Lattice Halo
 After=multi-user.target
 
 [Service]
-# Type=simple
+Type=simple
 User=pi
 WorkingDirectory=/home/pi/lattice/device/halo/
 ExecStart=sudo bash /home/pi/lattice/device/halo/start.sh
@@ -45,6 +46,10 @@ cat /etc/systemd/system/lattice.halo.service
 echo "---"
 echo "[setupd.sh] chmod lattice.halo.service"
 sudo chmod 644 /etc/systemd/system/lattice.halo.service
+
+# --- delist service if exists
+echo "[setupd.sh] lattice.halo.service: disable"
+sudo systemctl disable lattice.halo.service
 
 # --- restart daemon (needed when changing service config file)
 echo "[setupd.sh] reload daemon"
