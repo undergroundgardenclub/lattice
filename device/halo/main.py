@@ -3,10 +3,11 @@ import digitalio
 import json
 import logging
 import multiprocessing
+import os
 import threading
 import time
 from uuid import uuid4
-from env import env_device_id
+from env import env_device_id, env_directory_logs
 from utils_api import req_get_device_messages, req_tracking_event
 from utils_device import calculate_offset_seconds, EVENT_TYPE_PLAY_AUDIO, EVENT_TYPE_RECORD_SERIES, EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_RECORD_QUERY, led_main, led_pattern, PIN_RECORD_BUTTON
 from utils_files import get_file_bytes
@@ -14,8 +15,8 @@ from utils_media import generate_media_id, play_audio
 
 
 # SETUP
-# --- logging
-logging.basicConfig(filename='/home/pi/lattice/device/halo/logs/halo.log', level=logging.DEBUG)
+# --- logging file
+logging.basicConfig(filename=env_directory_logs() + "halo.log", level=logging.DEBUG)
 logging.info('[main] SETUP')
 # --- peripherals (maybe should be global references for control overrides by subprocesses?)
 button_input = digitalio.DigitalInOut(PIN_RECORD_BUTTON)
@@ -210,4 +211,3 @@ while True:
         logging.error("[loop] error: %s", loop_err)
         led_pattern("error")
         req_tracking_event({ "type": "device_exception", "data": {} })
-

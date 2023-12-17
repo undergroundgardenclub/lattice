@@ -26,7 +26,11 @@ def env_device_id():
     
 def env_directory_data():
     this_path = os.path.dirname(os.path.abspath(__file__))
-    return this_path + "/data"
+    return this_path + "/data/"
+
+def env_directory_logs():
+    this_path = os.path.dirname(os.path.abspath(__file__))
+    return this_path + "/logs/"
 
 # RECORDING
 def env_recording_frame_rate():
