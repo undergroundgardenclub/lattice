@@ -1,6 +1,8 @@
 # env
 __pycache__
 .venv
+.env
+.env.networks
 
 # setup
 Raspberry-Pi-Installer-Scripts
