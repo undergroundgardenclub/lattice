@@ -54,7 +54,7 @@ class RecordingSeriesManager():
             print("[join_recordings] downloading tmp files: ", recording_paths)
             for rk in recording_keys:
                 bytes = get_stored_file_bytes(rk)
-                path = tmp_file_set(bytes)
+                path = tmp_file_set(bytes, "mp4")
                 recording_paths.append(path)
             # --- merge
             merge_media_files(recording_paths, self.series_recording_file_path)

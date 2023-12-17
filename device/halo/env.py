@@ -18,7 +18,7 @@ def env_aws_access_key_id():
 def env_aws_secret_access_key():
     return _env_getter('AWS_SECRET_ACCESS_KEY')
 def env_aws_s3_files_bucket():
-    return _env_getter('AWS_FILES_BUCKET')
+    return _env_getter('AWS_BUCKET_FILES')
 
 # DEVICE
 def env_device_id():
@@ -26,7 +26,11 @@ def env_device_id():
     
 def env_directory_data():
     this_path = os.path.dirname(os.path.abspath(__file__))
-    return this_path + "/data"
+    return this_path + "/data/"
+
+def env_directory_logs():
+    this_path = os.path.dirname(os.path.abspath(__file__))
+    return this_path + "/logs/"
 
 # RECORDING
 def env_recording_frame_rate():

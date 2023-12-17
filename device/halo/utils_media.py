@@ -1,10 +1,11 @@
 import logging
-from pygame import mixer
+import pygame
 import subprocess
 import time
+from typing import Tuple
 from env import env_device_id, env_directory_data, env_recording_frame_rate, env_recording_sample_rate
 from utils_device import calculate_offset_seconds
-from utils_files import read_file_json
+from utils_files import read_file_json, tmp_file_rmv, tmp_file_set
 
 
 # FFMPEG
@@ -55,21 +56,40 @@ def get_media_local_file_path(media_id, media_format, segment_id = None):
 
 
 # AUDIO
-AUDIO_CHANNEL_MAIN = 0
-# AUDIO_CHANNEL_NOTIFICATIONS = 1 # maybe notifs on separate channel so it can play w/o interrupting main audio
+# Accessing audio devices between users/groups is a nightmare. Utilizing pipewire's cli command seems the most sane.
+# HOWEVER, a challenge remains where "Host is not found" when this is run from a cron/systemd initialization
+# Holy shit got it to work. Problem was that on the service I needed a XDG runtime var to be set for the pi user
 
+# --- play (v1)
+AUDIO_CHANNEL_MAIN = 0
 def play_audio(audio_bytes, is_blocking: bool, channel = AUDIO_CHANNEL_MAIN):
-    logging.info("[play_audio] playing")
-    mixer.init()
+    logging.info("[play_audio] playing, blocking: %s", is_blocking)
+    pygame.mixer.init()
     # --- create sound
-    sound = mixer.Sound(audio_bytes)
+    sound = pygame.mixer.Sound(audio_bytes)
     # --- create channel + play
-    channel = mixer.Channel(channel) # must provide id. in the future may need to manage this if doing audio playback + notifications sounds
+    channel = pygame.mixer.Channel(channel) # must provide id. in the future may need to manage this if doing audio playback + notifications sounds
     channel.set_volume(0.75)
     channel.play(sound, loops=0)
     # --- wait till done playing sound before returning (needed seomtimes bc a process exit stops sound)
     if is_blocking:
-        logging.info("[play_audio] busy/blocking")
+        logging.info("[play_audio] playing, start: %s", time.time())
         while channel.get_busy():
             continue
+        logging.info("[play_audio] playing, done: %s", time.time())
     logging.info("[play_audio] done")
+
+# --- play (v2)
+# def play_audio(audio_bytes, is_blocking: bool):
+#     logging.info("[play_audio] play")
+#     tmp_file_path = tmp_file_set(audio_bytes.read(), file_extension="mp3")
+#     try:
+#         logging.info("[play_audio] audio file: %s", tmp_file_path)
+#         std_result = subprocess.run(['pw-play', tmp_file_path], capture_output=True)
+#         logging.info("[play_audio] audio result: %s", std_result)
+#     except Exception as audio_err:
+#         logging.info("[play_audio] error: %s", audio_err)
+#     # --- why can't i rmv this damn thing
+#     # tmp_file_rmv(tmp_file_path)
+#     return
+

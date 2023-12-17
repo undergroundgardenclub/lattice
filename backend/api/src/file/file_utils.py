@@ -9,9 +9,9 @@ def tmp_file_path(prefix=""):
     with tempfile.NamedTemporaryFile(delete=False, prefix=prefix, suffix='.mp4', mode='wb') as tmp_file:
         return tmp_file.name
 
-def tmp_file_set(file_bytes):
+def tmp_file_set(file_bytes, file_extension: str):
     # Write the video bytes to a temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4', mode='wb') as tmp_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=f'.{file_extension}', mode='wb') as tmp_file:
         tmp_file.write(file_bytes)
         tmp_file_path = tmp_file.name
     print(f'[tmp_file_set] path: {tmp_file_path}')
@@ -39,7 +39,7 @@ def merge_media_files(file_paths: List[str], output_file_path: str):
     # --- form file txt
     file_list_content = "".join(f"file '{path}'\n" for path in file_paths)
     file_list_bytes = io.BytesIO(file_list_content.encode())
-    file_list_path = tmp_file_set(file_list_bytes.read())
+    file_list_path = tmp_file_set(file_list_bytes.read(), "mp4")
     # --- FFmpeg command (feed in tmp file)
     command = [
         "ffmpeg",

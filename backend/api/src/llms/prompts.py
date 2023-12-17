@@ -64,7 +64,7 @@ def prompt_query_action(input_text: str):
         model="gpt-3.5-turbo-1106",
         response_format={ "type": "json_object" },
         messages=[
-            { "role": "system", "content": f"You are a helpful assistant trying to understand which function to run from a user request. You have the following tool functions with argument data structures: {json.dumps(QueryTools().tools)}. Respond in the JSON format, {{ 'toolName': str, 'toolArgs': dict }} " },
+            { "role": "system", "content": f"You are a helpful assistant trying to understand which function to run from a user request. You are only allowed to use the following functions: {json.dumps(QueryTools().tools)}. Respond in the JSON format, {{ 'functionName': str, 'functionArgs': dict }}." },
             { "role": "user", "content": input_text }
         ],
         temperature=0.2,
@@ -72,11 +72,11 @@ def prompt_query_action(input_text: str):
     )
     # parse response
     data = json.loads(response.choices[0].message.content)
-    tool_name = data['toolName']
-    tool_args = data['toolArgs']
-    print(f"[prompty_query] response: {tool_name}", tool_args)
+    function_name = data['functionName']
+    function_args = data['functionArgs']
+    print(f"[prompty_query] response: {function_name}", function_args)
     # return
-    return tool_name, tool_args
+    return function_name, function_args
 
 # --- help manual
 def prompt_query_help_manual():

@@ -19,7 +19,7 @@ async def _job_intake_recording_series(file: dict, device_id: str, series_id: st
 
     # DURATION (needed for offsetting image search, not a fan of slowing down processing/inserts but its simple for now)
     media_file_bytes = get_stored_file_bytes(file.get("file_key")) # TODO: request.files.get('file') but writing offline atm
-    tmp_file_path = tmp_file_set(media_file_bytes) # need file path for OpenCV processing
+    tmp_file_path = tmp_file_set(media_file_bytes, "mp4") # need file path for OpenCV processing
     try:
         recording_duration_sec = get_media_file_duration(tmp_file_path)
     finally:

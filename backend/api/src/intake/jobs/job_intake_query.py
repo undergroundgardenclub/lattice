@@ -107,7 +107,7 @@ async def _job_intake_query(device_id: str, file: dict, text: str = None):
     elif query_tool_name == QueryTools().tools["question_answer"]["name"]:
         # --- get frame (going to grab 2 seconds in for simplicity)
         video_file_bytes = get_stored_file_bytes(file.get("file_key"))
-        tmp_file_path = tmp_file_set(video_file_bytes)
+        tmp_file_path = tmp_file_set(video_file_bytes, "mp4")
         try:
             encoded_frame_jpg = video_frame_at_second(tmp_file_path, 1)
         finally:
