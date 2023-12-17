@@ -5,7 +5,7 @@ import logging
 import os
 import requests
 import tempfile
-from env import env_aws_access_key_id, env_aws_secret_access_key, env_aws_s3_files_bucket
+from env import env_aws_access_key_id, env_aws_secret_access_key, env_aws_s3_files_bucket, env_directory_data
 
 # DEVICE-LEVEL
 def get_file_bytes(path_or_url: str) -> io.BytesIO:
@@ -46,15 +46,20 @@ def read_file_json(file_path):
 
 # TMP
 def tmp_file_path(prefix=""):
-    with tempfile.NamedTemporaryFile(delete=False, prefix=prefix, suffix='.mp4', mode='wb') as tmp_file:
+    with tempfile.NamedTemporaryFile(delete=False, dir=env_directory_data(), prefix=prefix, suffix='.mp4', mode='wb') as tmp_file:
         return tmp_file.name
 
 def tmp_file_set(file_bytes, file_extension: str):
     logging.info("[tmp_file_set] setting %s", file_extension)
     # Write the video bytes to a temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=f'.{file_extension}', mode='wb') as tmp_file:
+    with tempfile.NamedTemporaryFile(delete=False, dir=env_directory_data(), suffix=f'.{file_extension}', mode='wb') as tmp_file:
         tmp_file.write(file_bytes)
         tmp_file_path = tmp_file.name
+        # --- update permissions so things like pipewire can access? (https://stackoverflow.com/questions/10541760/can-i-set-the-umask-for-tempfile-namedtemporaryfile-in-python)
+        umask = os.umask(0o666)
+        os.umask(umask)
+        os.chmod(tmp_file.name, 0o666 & ~umask)
+
     logging.info("[tmp_file_set] path: %s", tmp_file_path)
     return tmp_file_path
 
