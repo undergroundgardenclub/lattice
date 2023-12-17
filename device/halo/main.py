@@ -189,7 +189,7 @@ while True:
             # ... execute
             if (next_message_type == EVENT_TYPE_PLAY_AUDIO):
                 audio_bytes = get_file_bytes(next_message_data.get("file_url"))
-                play_audio(audio_bytes, is_blocking=True)
+                play_audio(audio_bytes, is_blocking=False)
 
 
         # PROCESS HEALTH CHECKS

@@ -13,7 +13,7 @@ echo "[setupd.sh] chmod start.sh"
 chmod +x ./start.sh
 
 # systemd
-# --- create new systemd service
+# --- create new systemd service (XDG SHIT IS CRITICAL FOR PLAYBACK AUDIO FFFFFFFSS)
 echo "[setupd.sh] write lattice.halo.service:"
 sudo bash -c 'cat << EOF > /etc/systemd/system/lattice.halo.service
 [Unit]
@@ -22,8 +22,10 @@ After=multi-user.target
 
 [Service]
 Type=simple
-User=root
+User=pi
 Group=audio
+Environment="DISPLAY=:0"
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
 WorkingDirectory=/home/pi/lattice/device/halo/
 ExecStart=bash /home/pi/lattice/device/halo/start.sh
 Restart=on-abort
@@ -45,6 +47,7 @@ sudo chown pi:pi /home/pi/lattice/device/halo/logs
 
 # --- delist service if exists
 echo "[setupd.sh] lattice.halo.service: disable"
+sudo systemctl stop lattice.halo.service
 sudo systemctl disable lattice.halo.service
 
 # --- restart daemon (needed when changing service config file)
