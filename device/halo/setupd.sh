@@ -18,14 +18,14 @@ echo "[setupd.sh] write lattice.halo.service:"
 sudo bash -c 'cat << EOF > /etc/systemd/system/lattice.halo.service
 [Unit]
 Description=Lattice Halo
-After=multi-user.target sound.target
+After=multi-user.target
 
 [Service]
 Type=simple
-User=pi
+User=root
 Group=audio
 WorkingDirectory=/home/pi/lattice/device/halo/
-ExecStart=sudo bash /home/pi/lattice/device/halo/start.sh
+ExecStart=bash /home/pi/lattice/device/halo/start.sh
 Restart=on-abort
 
 [Install]
@@ -34,8 +34,14 @@ EOF'
 echo "---"
 cat /etc/systemd/system/lattice.halo.service
 echo "---"
-echo "[setupd.sh] chmod lattice.halo.service"
+echo "[setupd.sh] chmod lattice.halo.service + start.sh"
 sudo chmod 644 /etc/systemd/system/lattice.halo.service
+sudo chmod 744 /home/pi/lattice/device/halo/start.sh
+
+# --- permissions for files/folders/etc
+echo "[setupd.sh] chowns"
+sudo chown pi:pi /home/pi/lattice/device/halo/logs
+# TODO: I commented out !root user lines on pipewire service configs, not sure if this will be needed https://www.reddit.com/r/pipewire/comments/mibuu9/pipewire_as_root/
 
 # --- delist service if exists
 echo "[setupd.sh] lattice.halo.service: disable"
