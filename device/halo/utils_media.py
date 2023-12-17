@@ -62,8 +62,8 @@ AUDIO_CHANNEL_MAIN = 0
 
 # --- play
 # def play_audio(audio_bytes, is_blocking: bool, channel = AUDIO_CHANNEL_MAIN):
-#     logging.info("[play_audio] playing")
-#     pygame.mixer.init()
+#     logging.info("[play_audio] playing, blocking: %s", is_blocking)
+#     pygame.mixer.init(devicename="hw3,0")
 #     # --- create sound
 #     sound = pygame.mixer.Sound(audio_bytes)
 #     # --- create channel + play
@@ -72,9 +72,10 @@ AUDIO_CHANNEL_MAIN = 0
 #     channel.play(sound, loops=0)
 #     # --- wait till done playing sound before returning (needed seomtimes bc a process exit stops sound)
 #     if is_blocking:
-#         logging.info("[play_audio] busy/blocking")
+#         logging.info("[play_audio] playing, start: %s", time.time())
 #         while channel.get_busy():
 #             continue
+#         logging.info("[play_audio] playing, done: %s", time.time())
 #     logging.info("[play_audio] done")
 
 def play_audio(audio_bytes, is_blocking: bool, channel = AUDIO_CHANNEL_MAIN):

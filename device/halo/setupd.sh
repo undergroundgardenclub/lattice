@@ -18,11 +18,12 @@ echo "[setupd.sh] write lattice.halo.service:"
 sudo bash -c 'cat << EOF > /etc/systemd/system/lattice.halo.service
 [Unit]
 Description=Lattice Halo
-After=multi-user.target
+After=multi-user.target sound.target
 
 [Service]
 Type=simple
 User=pi
+Group=audio
 WorkingDirectory=/home/pi/lattice/device/halo/
 ExecStart=sudo bash /home/pi/lattice/device/halo/start.sh
 Restart=on-abort
