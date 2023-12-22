@@ -2,28 +2,22 @@ from datetime import datetime
 import json
 import sqlalchemy as sa
 from orm import sa_sessionmaker
-from file.file_cloud_storage import get_stored_file_bytes
-from file.file_utils import get_media_file_duration, tmp_file_rmv, tmp_file_set
-from intake.Recording import Recording
+from recording.get_recording_file_duration import get_recording_file_duration
+from recording.Recording import Recording
 from voice.speech_to_text import speech_to_text
 
 
-async def _job_intake_recording_series(file: dict, device_id: str, series_id: str):
+async def _job_device_ingest_recording(media_file_dict: dict, device_id: str, series_id: str):
     """
     Process transcript for a recording file and save to database for later reference. TODO: could trigger follow up actions for passive analysis
     """
-    print(f"[_job_intake_recording_series] device_id: {device_id}, series_id: {series_id}, file:", file)
+    print(f"[_job_device_ingest_recording] device_id: {device_id}, series_id: {series_id}, file:", media_file_dict)
     
     # TRANSCRIBE
-    transcript = speech_to_text(file.get("file_url"), file.get("transcript_id")) # transcript_id is only known if we've previously processed
+    transcript = speech_to_text(media_file_dict.get("file_url"), media_file_dict.get("transcript_id")) # transcript_id is only known if we've previously processed
 
     # DURATION (needed for offsetting image search, not a fan of slowing down processing/inserts but its simple for now)
-    media_file_bytes = get_stored_file_bytes(file.get("file_key")) # TODO: request.files.get('file') but writing offline atm
-    tmp_file_path = tmp_file_set(media_file_bytes, "mp4") # need file path for OpenCV processing
-    try:
-        recording_duration_sec = get_media_file_duration(tmp_file_path)
-    finally:
-        tmp_file_rmv(tmp_file_path)
+    media_duration_sec = get_recording_file_duration(media_file_dict)
 
     # INSERT TO DB
     session = sa_sessionmaker()
@@ -33,9 +27,9 @@ async def _job_intake_recording_series(file: dict, device_id: str, series_id: st
                 "device_id": device_id,
                 "series_id": series_id,
                 "created_at": datetime.now(),
-                "recording_file_key": file.get("file_key"),
-                "recording_file_url": file.get("file_url"),
-                "recording_duration_sec": recording_duration_sec,
+                "media_file_key": media_file_dict.get("file_key"),
+                "media_file_url": media_file_dict.get("file_url"),
+                "media_duration_sec": media_duration_sec,
                 "transcript_id": transcript.get("transcript_id"),
                 "transcript_text": transcript.get("text"),
                 "transcript_sentences": transcript.get("sentences"),
@@ -47,11 +41,11 @@ async def _job_intake_recording_series(file: dict, device_id: str, series_id: st
     return
 
 
-async def job_intake_recording_series(job, job_token):
+async def job_device_ingest_recording(job, job_token):
     # --- get params
     device_id = job.data.get("device_id")
     series_id = job.data.get("series_id")
-    file = job.data.get("file")
+    media_file_dict = job.data.get("media_file_dict")
     # --- strinigfy payload to transfer over the wire
-    payload = await _job_intake_recording_series(file, device_id, series_id)
+    payload = await _job_device_ingest_recording(media_file_dict, device_id, series_id)
     return json.dumps(payload)
