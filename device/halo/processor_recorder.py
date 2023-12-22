@@ -16,7 +16,7 @@ from utils_media import get_media_local_file_path, get_media_key
 # --- video configs
 video_frame_rate = env_recording_frame_rate()
 video_frame_duration_limit = int(1_000_000 / video_frame_rate) # check manual for this recipocal calc
-video_size = (1280, 720) # (1600, 900) seems great, (1920, 1080) is big if recording long term, (1280, 720) seemed blurry with movement is a hinderance. err'ing to start on higher quality
+# video_size = (1280, 720) # determined now during runtime based on task (1600, 900) seems great, (1920, 1080) is big if recording long term, (1280, 720) seemed blurry with movement is a hinderance. err'ing to start on higher quality
 video_encoder = H264Encoder(bitrate=10000000)
 # --- audio configs
 audio_format = pyaudio.paInt16
@@ -62,10 +62,15 @@ def processor_recorder(pe, pq): # process_events, process_queues
 
             # RECORD: VIDEO
             with Picamera2() as picam2: # seems this context manager is needed for camera availability errs/flow
-                picam2_config = picam2.create_video_configuration({ "size": video_size }, controls={ "FrameDurationLimits": (video_frame_duration_limit, video_frame_duration_limit) })
+                # --- config: determine params based on user need (queries, may be about what's visual, so need higher cap)
+                config_video_size = (1920, 1080) if job_type == EVENT_TYPE_RECORD_QUERY else (1280, 720)
+                config_video_quality = Quality.VERY_HIGH if job_type == EVENT_TYPE_RECORD_QUERY else Quality.MEDIUM
+                logging.info("[processor_recorder] config quality/size: %s / %s", config_video_quality, config_video_size)
+                # --- config: init
+                picam2_config = picam2.create_video_configuration({ "size": config_video_size }, controls={ "FrameDurationLimits": (video_frame_duration_limit, video_frame_duration_limit) })
                 picam2.configure(picam2_config)
                 # --- record!... until...
-                picam2.start_recording(video_encoder, output=file_path_h264, quality=Quality.MEDIUM) # 2 min clips w/ LOW were ~14MB. Going to bump
+                picam2.start_recording(video_encoder, output=file_path_h264, quality=config_video_quality) # 2 min clips w/ LOW were ~14MB. Going to bump
                 video_start_time_sec = time.time()
                 
                 # RECORD: AUDIO
