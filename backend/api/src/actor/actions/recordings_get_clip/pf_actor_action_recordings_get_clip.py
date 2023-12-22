@@ -7,7 +7,7 @@ from recording.Recording import Recording
 from recording.RecordingSeriesManager import RecordingSeriesManager
 
 
-async def _job_actor_action_recordings_get_clip(device_id: str, series_id: str, interval_unit: str, interval_num: int, to_email: str):
+async def _pf_actor_action_recordings_get_clip(device_id: str, series_id: str, interval_unit: str, interval_num: int, to_email: str):
     # PARAMS
     # --- parse interval size/num off query args
     if interval_unit  == "minutes":
@@ -18,7 +18,7 @@ async def _job_actor_action_recordings_get_clip(device_id: str, series_id: str, 
         raise f"Unexpected 'interval_unit': {interval_unit}"
 
     # RECORDINGS FETCH
-    print(f"[_job_actor_action_recordings_get_clip] fetching recordings: ", device_id)
+    print(f"[_pf_actor_action_recordings_get_clip] fetching recordings: ", device_id)
     # --- query recordings
     recordings = []
     session = sa_sessionmaker()
@@ -38,7 +38,7 @@ async def _job_actor_action_recordings_get_clip(device_id: str, series_id: str, 
         raise "No recordings found"
 
     # JOIN & SEND RECORDINGS
-    print(f"[_job_actor_action_recordings_get_clip] joining & sending: ", device_id)
+    print(f"[_pf_actor_action_recordings_get_clip] joining & sending: ", device_id)
     # --- join/cut/upload video
     rsm = RecordingSeriesManager()
     try:
@@ -55,8 +55,8 @@ async def _job_actor_action_recordings_get_clip(device_id: str, series_id: str, 
         rsm.remove_series_recording_file()
 
 
-async def job_actor_action_recordings_get_clip(job, job_token):
-    print(f"[job_actor_action_recordings_get_clip] start: ", job)
+async def pf_actor_action_recordings_get_clip(job, job_token):
+    print(f"[pf_actor_action_recordings_get_clip] start: ", job)
     try:
         # --- get params
         device_id = job.data.get("device_id")
@@ -65,9 +65,9 @@ async def job_actor_action_recordings_get_clip(job, job_token):
         interval_num = job.data.get("interval_num")
         to_email = job.data.get("to_email")
         # --- strinigfy payload to transfer over the wire
-        payload = await _job_actor_action_recordings_get_clip(device_id, series_id, interval_unit, interval_num, to_email)
+        payload = await _pf_actor_action_recordings_get_clip(device_id, series_id, interval_unit, interval_num, to_email)
         # --- allow access to completed payload
         return json.dumps(payload)
-    except Exception as job_err:
-        print(f"[job_actor_action_recordings_get_clip] error: ", job_err)
+    except Exception as pf_err:
+        print(f"[pf_actor_action_recordings_get_clip] error: ", pf_err)
         return None

@@ -12,13 +12,13 @@ from vision.cv import video_frame_at_second
 from voice.text_to_speech import text_to_speech
 
 
-async def _job_actor_action_question_answer(device_id: str, series_id: str, recording_id: dict):
-    print(f"[_job_actor_action_question_answer] start: ", device_id)
+async def _pf_actor_action_question_answer(device_id: str, series_id: str, recording_id: dict):
+    print(f"[_pf_actor_action_question_answer] start: ", device_id)
     # RECORDING FETCH
     session = sa_sessionmaker()
     recording_query = await session.execute(sa.select(Recording).where(Recording.id == recording_id))
     recording = recording_query.scalars().unique().one()
-    print(f"[_job_actor_action_question_answer] recording exists: {recording != None}")
+    print(f"[_pf_actor_action_question_answer] recording exists: {recording != None}")
 
     # PROCESS
     # --- get frame (going to grab 2 seconds in for simplicity)
@@ -30,7 +30,7 @@ async def _job_actor_action_question_answer(device_id: str, series_id: str, reco
         tmp_file_rmv(tmp_file_path)
     # --- query gpt
     answer_text = prompt_query_general_question_answer(recording.transcript_text, encoded_frame_jpg)
-    print(f"[_job_actor_action_question_answer] answer_text: {answer_text}")
+    print(f"[_pf_actor_action_question_answer] answer_text: {answer_text}")
 
     # RESPOND (via device message polling)
     # --- text to speech
@@ -56,16 +56,16 @@ async def _job_actor_action_question_answer(device_id: str, series_id: str, reco
     return payload
 
 
-async def job_actor_action_question_answer(job, job_token):
-    print(f"[job_actor_action_question_answer] start: ", job)
+async def pf_actor_action_question_answer(job, job_token):
+    print(f"[pf_actor_action_question_answer] start: ", job)
     try:
         # --- get params
         device_id = job.data.get("device_id")
         series_id = job.data.get("series_id")
         recording_id = job.data.get("recording_id")
         # --- strinigfy payload to transfer over the wire
-        payload = await _job_actor_action_question_answer(device_id, series_id, recording_id)
+        payload = await _pf_actor_action_question_answer(device_id, series_id, recording_id)
         return json.dumps(payload)
-    except Exception as job_err:
-        print(f"[job_actor_action_question_answer] error: ", job_err)
+    except Exception as pf_err:
+        print(f"[pf_actor_action_question_answer] error: ", pf_err)
         return None

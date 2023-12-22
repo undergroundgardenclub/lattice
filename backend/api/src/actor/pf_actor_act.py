@@ -13,7 +13,7 @@ from orm import sa_sessionmaker
 from voice.speech_to_text import speech_to_text
 
 
-async def _job_actor_act(device_id: str, series_id: str, query_media_file_dict: dict, query_text: Optional[str]):
+async def _pf_actor_act(device_id: str, series_id: str, query_media_file_dict: dict, query_text: Optional[str]):
     """
     Do something based on what a person sent in
     """
@@ -45,9 +45,9 @@ async def _job_actor_act(device_id: str, series_id: str, query_media_file_dict: 
 
     # INSTRUCT
     # --- ask for function type (series summary email, video slice request, query)
-    print(f"[_job_actor_act] query: ", _query_text)
+    print(f"[_pf_actor_act] query: ", _query_text)
     query_tool_name, query_tool_args = prompt_determine_actor_tool(_query_text)
-    print(f"[_job_actor_act] tool: {query_tool_name}", query_tool_args)
+    print(f"[_pf_actor_act] tool: {query_tool_name}", query_tool_args)
 
     # EXECUTE
     at = ActorTools()
@@ -83,11 +83,11 @@ async def _job_actor_act(device_id: str, series_id: str, query_media_file_dict: 
         })
     # --- other (this exists to ensure LLM doesn't push into prior categories)
     else:
-        print("[_job_actor_act] tool '{query_tool}' unexpected")
+        print("[_pf_actor_act] tool '{query_tool}' unexpected")
 
 
-async def job_actor_act(job, job_token):
-    print(f"[job_actor_act] start", job)
+async def pf_actor_act(job, job_token):
+    print(f"[pf_actor_act] start", job)
     try:
         # --- get params
         device_id = job.data.get("device_id")
@@ -95,9 +95,9 @@ async def job_actor_act(job, job_token):
         query_media_file_dict = job.data.get("query_media_file_dict")
         query_text = job.data.get("query_text")
         # --- strinigfy payload to transfer over the wire
-        payload = await _job_actor_act(device_id, series_id, query_media_file_dict, query_text)
+        payload = await _pf_actor_act(device_id, series_id, query_media_file_dict, query_text)
         # --- allow access to payload data on completed jobs
         return json.dumps(payload)
-    except Exception as job_err:
-        print(f"[job_actor_act] error: ", job_err)
+    except Exception as pf_err:
+        print(f"[pf_actor_act] error: ", pf_err)
         return None

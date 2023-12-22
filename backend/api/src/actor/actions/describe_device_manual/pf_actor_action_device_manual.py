@@ -9,7 +9,7 @@ from orm import sa_sessionmaker
 from voice.text_to_speech import text_to_speech
 
 
-async def _job_actor_action_describe_device_manual(device_id: str):
+async def _pf_actor_action_describe_device_manual(device_id: str):
     # --- query stringified tools dict with their descriptions/SON schemas
     help_manual_text = prompt_query_help_manual()
     # --- text to speech
@@ -31,18 +31,18 @@ async def _job_actor_action_describe_device_manual(device_id: str):
     await session.close()
     # --- return
     payload = { 'file_url': response_audio_file_url }
-    print(f"[_job_actor_action_describe_device_manual] payload: ", payload)
+    print(f"[_pf_actor_action_describe_device_manual] payload: ", payload)
     return payload
 
 
-async def job_actor_action_describe_device_manual(job, job_token):
-    print(f"[job_actor_action_describe_device_manual] start: ", job)
+async def pf_actor_action_describe_device_manual(job, job_token):
+    print(f"[pf_actor_action_describe_device_manual] start: ", job)
     try:
         # --- get params
         device_id = job.data.get("device_id")
         # --- strinigfy payload to transfer over the wire
-        payload = await _job_actor_action_describe_device_manual(device_id)
+        payload = await _pf_actor_action_describe_device_manual(device_id)
         return json.dumps(payload)
-    except Exception as job_err:
-        print(f"[job_actor_action_describe_device_manual] error: ", job_err)
+    except Exception as pf_err:
+        print(f"[pf_actor_action_describe_device_manual] error: ", pf_err)
         return None
