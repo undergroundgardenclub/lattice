@@ -7,10 +7,10 @@ from env import env_api_url, env_device_id
 
 # RECORDINGS
 # --- series
-def req_recording_series_submit(file: dict, series_id: str):
+def req_recording_series_submit(media_file_dict: dict, series_id: str):
     logging.info("[req_recording_series_submit] sending recording")
     try:
-        response = requests.post(env_api_url() + "/v1/intake/recording/series", data=json.dumps({ "device_id": env_device_id(), "file": file, "series_id": series_id }))
+        response = requests.post(env_api_url() + "/v1/device/ingest/recording", data=json.dumps({ "device_id": env_device_id(), "series_id": series_id, "media_file_dict": media_file_dict }))
         response_json = response.json()
         logging.info('[req_recording_series_submit] response: ', response_json)
         return
@@ -20,10 +20,10 @@ def req_recording_series_submit(file: dict, series_id: str):
 
 
 # QUERY
-def req_query(query_file: dict, series_id: str = None):
+def req_query(query_media_file_dict: dict, series_id: str = None):
     logging.info("[req_query] sending query recording/file")
     try:
-        response = requests.post(env_api_url() + "/v1/intake/query", data=json.dumps({ "device_id": env_device_id(), "file": query_file, "series_id": series_id }))
+        response = requests.post(env_api_url() + "/v1/actor/act", data=json.dumps({ "device_id": env_device_id(), "series_id": series_id, "media_file_dict": query_media_file_dict }))
         response_json = response.json()
         logging.info("[req_query] response: ", response_json)
         return response_json.get("data")
