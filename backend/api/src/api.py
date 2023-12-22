@@ -3,12 +3,12 @@ from sanic import Sanic
 from sanic.response import json
 from sanic_cors import CORS
 import env
-from devices.routes import blueprint_devices
-from intake.routes import blueprint_intake
+from actor.routes import blueprint_actor
+from device.routes import blueprint_devices
+from queues.routes import blueprint_queues
 from tracking.routes import blueprint_tracking
 from middleware.error_handler import APIErrorHandler
 from orm import sa_sessionmaker
-
 
 # INIT
 api_app = Sanic('api')
@@ -39,10 +39,12 @@ async def close_session(request, response):
 @api_app.route('/health', methods=['GET'])
 def app_route_health(_):
     return json({ 'status': 'success' })
-# --- device (messages queue)
+# --- actor (queries)
+api_app.blueprint(blueprint_actor)
+# --- device (ingest recordings, messages queue)
 api_app.blueprint(blueprint_devices)
-# --- intake (streams/recordings/queries)
-api_app.blueprint(blueprint_intake)
+# --- queues (for easy job adding for tests)
+api_app.blueprint(blueprint_queues)
 # --- tracking (events)
 api_app.blueprint(blueprint_tracking)
 

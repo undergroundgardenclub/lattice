@@ -10,9 +10,9 @@ class Recording(BaseModel):
     series_id = Column(Text())
     created_at = Column(DateTime(timezone=True))
     # --- recording file info
-    recording_file_key = Column(Text())
-    recording_file_url = Column(Text())
-    recording_duration_sec = Column(Float())
+    media_file_key = Column(Text())
+    media_file_url = Column(Text())
+    media_duration_sec = Column(Float())
     # --- transcript info
     transcript_id = Column(Text()) # uuid provided by assembly ai
     transcript_text = Column(Text())
@@ -25,8 +25,8 @@ class Recording(BaseModel):
             "device_id": self.device_id,
             "series_id": self.series_id,
             "created_at": str(self.created_at),
-            "recording_file_key": self.recording_file_key,
-            "recording_file_url": self.recording_file_url,
+            "media_file_key": self.media_file_key,
+            "media_file_url": self.media_file_url,
             "transcript_id": self.transcript_id,
             "transcript_text": self.transcript_text,
             "transcript_sentences": self.transcript_sentences,

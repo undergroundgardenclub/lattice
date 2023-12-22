@@ -1,48 +1,40 @@
 import asyncio
 from bullmq import Job, Queue, Worker
 from env import env_queue_host, env_queue_port
-from intake.jobs.job_intake_recording_series import job_intake_recording_series
-from intake.jobs.job_intake_query import job_intake_query
+from actor.pf_actor_act import pf_actor_act
+from actor.actions.describe_device_manual.pf_actor_action_device_manual import pf_actor_action_describe_device_manual
+from actor.actions.question_answer.pf_actor_action_question_answer import pf_actor_action_question_answer
+from actor.actions.recordings_get_clip.pf_actor_action_recordings_get_clip import pf_actor_action_recordings_get_clip
+from actor.actions.recordings_summarize.pf_actor_action_recordings_summarizer import pf_actor_action_recordings_summarizer
+from device.ingest.pf_device_ingest_recording import pf_device_ingest_recording
 
 
 # SETUP
-# --- connection
-redis_opts = dict(host=env_queue_host(),port=env_queue_port())
+# --- connection (duplicating from queues toa avoid circular import)
+queue_redis_opts = dict(host=env_queue_host(),port=env_queue_port())
 # --- worker config
 # job opts/locks (play with "stall" criteria. jobs being processed that are moved into "stalled" position, that then finish, throw a "lock not found" error)
 # read more: https://github.com/OptimalBits/bull/issues/1591#issuecomment-567300561 / https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#queue / https://github.com/OptimalBits/bull/discussions/2156#discussioncomment-1294458
-worker_opts = { "maxStalledCount": 0 }
-
-
-# QUEUES
-queues = dict(
-    intake_recording_series=Queue("intake_recording_series", redis_opts),
-    intake_recording_series_done=Queue("intake_recording_series_done", redis_opts),
-    intake_query=Queue("intake_query", redis_opts),
-)
-
-
-# FUNCS
-# --- process wrapper (for logging ease)
-def pw(processor_fn):
-    def _pw(job, job_token):
-        print("[worker] job: ", job.id)
-        return processor_fn(job, job_token)
-    return _pw
-# --- job add wrapper (for closing + remove on fail config ease)
-async def queue_add_job(queue, job_data: dict, job_opts: dict = {}) -> Job:
-    print(f'[queue_add] {queue.name} ->', job_data)
-    job = await queue.add(queue.name, job_data, { "removeOnComplete": True, "removeOnFail": True, **job_opts })
-    await queue.close()
-    return job
+queue_worker_opts = { "maxStalledCount": 0 }
 
 
 # WORK
+# --- process function wrapper (for logging ease)
+def pfw(processor_fn):
+    def _pfw(job, job_token):
+        print("[worker] job: ", job.id)
+        return processor_fn(job, job_token)
+    return _pfw
+
 async def work():
-    # --- intake recording
-    w_intake_recording_series = Worker("intake_recording_series", pw(job_intake_recording_series), { **worker_opts, "connection": redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
-    # --- intake query
-    w_intake_query = Worker("intake_query", pw(job_intake_query), { **worker_opts, "connection": redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
+    # --- actors
+    w_actor_act = Worker("actor_act", pfw(pf_actor_act), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
+    w_actor_action_describe_device_manual = Worker("actor_action_describe_device_manual", pfw(pf_actor_action_describe_device_manual), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
+    w_actor_action_question_answer = Worker("actor_action_question_answer", pfw(pf_actor_action_question_answer), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
+    w_actor_action_recordings_get_clip = Worker("actor_action_recordings_get_clip", pfw(pf_actor_action_recordings_get_clip), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
+    w_actor_action_recordings_summarizer = Worker("actor_action_recordings_summarizer", pfw(pf_actor_action_recordings_summarizer), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
+    # --- devices
+    w_device_ingest_recording = Worker("device_ingest_recording", pfw(pf_device_ingest_recording), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
     # ... keep workers alive
     while True:
         await asyncio.sleep(1)

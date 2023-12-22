@@ -4,6 +4,7 @@ import yaml
 from types import SimpleNamespace
 from typing import List
 from openai import OpenAI
+from actor.actor_tools import ActorTools
 from env import env_open_ai_api_key
 from vision.cv import encoded_frame_to_base64
 
@@ -13,58 +14,16 @@ openai_client = OpenAI(api_key=env_open_ai_api_key())
 
 # QUERY
 # --- tool/action requests
-class QueryTools:
-    def __init__(self):
-        self.tools = {
-            "send_recording_series_summary_email": {
-                "name": "send_recording_series_summary_email",
-                "description": "Get an email sent to you about recordings you've done today or yesterday.",
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "interval_unit": { "type": "string", "enum": ["days"], "default": "days" },
-                        "interval_num": { "type": "integer", "default": 0 },
-                    },
-                }
-            },
-            "send_video_series_slice": {
-                "name": "send_video_series_slice",
-                "description": "Get a recording that covers some number of minutes or hours.",
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "interval_unit": { "type": "string", "enum": ["minutes", "hours"], "default": "minutes" },
-                        "interval_num": { "type": "integer", "default": 15 },
-                    },
-                }
-            },
-            "question_answer": {
-                "name": "question_answer",
-                "description": "Get answers to general questions, excluding device settings and functionality.",
-                "schema": { "type": "object", "properties": {} }
-            },
-            "help_manual_about_tool": {
-                "name": "help_manual_about_tool",
-                "description": "Learn about this device's functionality and what spoken commands it accepts.",
-                "schema": { "type": "object", "properties": {} }
-            },
-            "other": {
-                "name": "other",
-                "description": "Catch all category for unclear intents",
-                "schema": { "type": "object", "properties": {} }
-            },
-        }
-    def get_tools_names(self):
-        return list(self.tools.keys())
+
 
 # --- query action decision making enum
-def prompt_query_action(input_text: str):
-    print(f"[prompt_query_action] querying")
+def prompt_determine_actor_tool(input_text: str):
+    print(f"[prompt_determine_actor_tool] querying")
     response = openai_client.chat.completions.create(
         model="gpt-3.5-turbo-1106",
         response_format={ "type": "json_object" },
         messages=[
-            { "role": "system", "content": f"You are a helpful assistant trying to understand which function to run from a user request. You are only allowed to use the following functions: {json.dumps(QueryTools().tools)}. Respond in the JSON format, {{ 'functionName': str, 'functionArgs': dict }}." },
+            { "role": "system", "content": f"You are a helpful assistant trying to understand which function to run from a user request. You are only allowed to use the following functions: {json.dumps(ActorTools().tools)}. Respond in the JSON format, {{ 'functionName': str, 'functionArgs': dict }}." },
             { "role": "user", "content": input_text }
         ],
         temperature=0.2,
@@ -85,7 +44,7 @@ def prompt_query_help_manual():
         model="gpt-3.5-turbo-1106",
         messages=[
             { "role": "system", "content": f"You are a helpful assistant telling a user what voice-based commands they can use with this device. Briefly describe the functionality and their params. Exclude tools themed as 'other' or 'miscellaneous' or 'help manual'." },
-            { "role": "user", "content": f"Narrate a description of the commands a person can use: {json.dumps(QueryTools().tools)}" },
+            { "role": "user", "content": f"Narrate a description of the commands a person can use: {json.dumps(ActorTools().tools)}" },
         ],
         temperature=0.2,
         max_tokens=400,
