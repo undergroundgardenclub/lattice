@@ -18,6 +18,7 @@ async def _pf_actor_action_question_answer(device_id: str, series_id: str, recor
     session = sa_sessionmaker()
     recording_query = await session.execute(sa.select(Recording).where(Recording.id == recording_id))
     recording = recording_query.scalars().unique().one()
+    await session.close()
     print(f"[_pf_actor_action_question_answer] recording exists: {recording != None}")
 
     # PROCESS
