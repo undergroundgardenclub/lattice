@@ -9,7 +9,7 @@ import time
 from uuid import uuid4
 from env import env_device_id, env_directory_logs
 from utils_api import req_get_device_messages, req_tracking_event
-from utils_device import calculate_offset_seconds, EVENT_TYPE_PLAY_AUDIO, EVENT_TYPE_RECORD_SERIES, EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_RECORD_QUERY, led_main, led_pattern, PIN_RECORD_BUTTON
+from utils_device import calculate_offset_seconds, EVENT_TYPE_PLAY_AUDIO, EVENT_TYPE_RECORD_SERIES, EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_RECORD_QUERY, led_main, PIN_RECORD_BUTTON
 from utils_files import get_file_bytes
 from utils_media import generate_media_id, play_audio
 
@@ -38,6 +38,7 @@ series_id = None # set/clear when triple tapping. going to set to a random uuid
 # TASKS
 # --- queues for data passing between processes
 process_queues = {
+    "queue_led": multiprocessing.Queue(),
     "queue_messages": multiprocessing.Queue(),
     "queue_recorder_query": multiprocessing.Queue(),
     "queue_recorder_series": multiprocessing.Queue(),
@@ -48,31 +49,33 @@ process_events = {
     "event_is_recording_series": multiprocessing.Event(), # events start is_set() == False
     "event_is_recording_query": multiprocessing.Event(), # events start is_set() == False
 }
-# --- processes: recording
+# --- processor: recording
 def processor_recorder_fork(pe, pq):
     import processor_recorder
     processor_recorder.processor_recorder(pe, pq)
 ps_processor_recorder = multiprocessing.Process(target=processor_recorder_fork, args=(process_events, process_queues))
-ps_processor_recorder.start()
-# --- processes: sending (doing a thread to leave processors open for load balancing/orchestrating. this isn't doing dedicated work)
+# --- processor: sending (doing a thread to leave processors open for load balancing/orchestrating. this isn't doing dedicated work)
 def processor_sender_fork(pe, pq):
     import processor_sender
     processor_sender.processor_sender(pe, pq)
 ps_processor_sender = threading.Thread(target=processor_sender_fork, args=(process_events, process_queues))
-ps_processor_sender.start()
-
+# --- processor: led patterns (this can be blocking, so offloading this to unblock main loop)
+def processor_led_fork(pe, pq):
+    import processor_led
+    processor_led.processor_led(pe, pq)
+ps_processor_led = threading.Thread(target=processor_led_fork, args=(process_events, process_queues))
 
 
 # INTERACTION FNS
 # --- single
 def interaction_press_single(pe, pq):
     logging.info('[interaction_press_single] triggered')
-    led_pattern() # just for demoing/testing out. can't seem to trigger from other processes
+    pq["queue_led"].put({ "type": "blink" }) # just for demoing/testing out. can't seem to trigger from other processes
 
 # --- double
 def interaction_press_double(pe, pq):
     logging.info('[interaction_press_double] triggered')
-    led_pattern("error")
+    pq["queue_led"].put({ "type": "error" })
 
 # --- triple
 def interaction_press_triple(pe, pq):
@@ -99,10 +102,10 @@ def interaction_press_long(pe, pq, is_button_pressed):
         pe["event_is_recording_query"].clear()
 
 
-# EXEC
+# PROCESSOR/LOOP
 logging.info('[main] LOOP')
 # --- blink to signal we've starting
-led_pattern()
+process_queues["queue_led"].put({ "type": "blink" })
 # --- save event about boot up
 req_tracking_event({ "type": "device_boot", "data": {} })
 # --- loop
@@ -112,14 +115,6 @@ while True:
         # PERIPHERAL: SETUP
         button.update()
         is_button_pressed = not button.value
-
-
-        # PERIPHERAL: LED (TODO: optimize so we're not constanly calling)
-        if process_events["event_is_recording_series"].is_set() == True or process_events["event_is_recording_query"].is_set() == True:
-            led_main.value = True
-        else:
-            led_main.value = False
-
 
         # PERIPHERAL: BUTTON
         # --- listen for clicks
@@ -152,19 +147,15 @@ while True:
         if interaction_active == "press_single":
             interaction_press_single(process_events, process_queues)
             interaction_active = None
-
         elif interaction_active == "press_double":
             interaction_press_double(process_events, process_queues)
             interaction_active = None
-
         elif interaction_active == "press_triple":
             interaction_press_triple(process_events, process_queues)
             interaction_active = None
-
         elif interaction_active == "press_long_start" and is_button_pressed:
             interaction_press_long(process_events, process_queues, is_button_pressed)
             interaction_active = "press_long_in_flight" # set new state so we don't continuously run this. the other will end
-
         elif interaction_active == "press_long_in_flight" and is_button_pressed == False:
             interaction_press_long(process_events, process_queues, is_button_pressed)
             interaction_active = None
@@ -198,16 +189,19 @@ while True:
             logging.info("[loop] 'ps_processor_recorder' dead, starting again")
             ps_processor_recorder = multiprocessing.Process(target=processor_recorder_fork, args=(process_events, process_queues))
             ps_processor_recorder.start()
-            led_pattern("error")
         if ps_processor_sender.is_alive() == False:
             logging.info("[loop] 'ps_processor_sender' dead, starting again")
             ps_processor_sender = threading.Thread(target=processor_sender_fork, args=(process_events, process_queues))
             ps_processor_sender.start()
-            led_pattern("error")
+        if ps_processor_led.is_alive() == False:
+            logging.info("[loop] 'ps_processor_led' dead, starting again")
+            ps_processor_led = threading.Thread(target=processor_led_fork, args=(process_events, process_queues))
+            ps_processor_led.start()
 
 
-        time.sleep(0.01)  # Small delay to debounce and reduce CPU usage
-    except Exception as loop_err:
-        logging.error("[loop] error: %s", loop_err)
-        led_pattern("error")
-        req_tracking_event({ "type": "device_exception", "data": {} })
+    except Exception as main_err:
+        logging.error("[loop] error: %s", main_err)
+        process_queues["queue_led"].put({ "type": "error" })
+        req_tracking_event({ "type": "device_exception", "data": { "device_processor_name": "main", "error_message": main_err } })
+
+    time.sleep(0.01)  # if we slow delay, button interactivity becomes wonky, keep at 0.01

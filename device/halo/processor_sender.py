@@ -1,13 +1,13 @@
-import json
 import logging
 import time
 from utils_api import req_query, req_recording_series_submit, req_tracking_event
 from utils_device import EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_SEND_SERIES_RECORDING, EVENT_TYPE_SEND_QUERY_RECORDING
 from utils_files import delete_file, store_file_from_path, get_stored_file_url
-from utils_media import combine_h264_and_wav_into_mp4, get_media_local_file_path, get_media_key
+from utils_media import combine_h264_and_wav_into_mp4
 
 
-def processor_sender(process_events, process_queues):
+# PROCESSOR
+def processor_sender(pe, pq):
     logging.info('[processor_sender] fork')
     while True:
         try:
@@ -15,8 +15,8 @@ def processor_sender(process_events, process_queues):
             job_type = None
             job_data = None
             # --- check for jobs
-            if process_queues["queue_sender"].qsize() > 0:
-                job = process_queues["queue_sender"].get()
+            if pq["queue_sender"].qsize() > 0:
+                job = pq["queue_sender"].get()
                 job_type = job["type"]
                 job_data = job_data = job.get("data")
             
@@ -56,8 +56,12 @@ def processor_sender(process_events, process_queues):
                     delete_file(file_path_wav)
                     delete_file(file_path_wav + ".json")
                     delete_file(file_path_mp4)
-        except Exception as sender_err:
-            logging.error('[processor_sender] error: %s', sender_err)
+
+
+        except Exception as proc_err:
+            logging.error('[processor_sender] error: %s', proc_err)
+            pq["queue_led"].put({ "type": "error" })
+            req_tracking_event({ "type": "device_exception", "data": { "device_processor_name": "processor_sender", "error_message": proc_err } })
 
         # -- continue
-        time.sleep(0.01)
+        time.sleep(0.1)

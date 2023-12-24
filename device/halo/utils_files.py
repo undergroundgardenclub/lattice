@@ -59,7 +59,6 @@ def tmp_file_set(file_bytes, file_extension: str):
         umask = os.umask(0o666)
         os.umask(umask)
         os.chmod(tmp_file.name, 0o666 & ~umask)
-
     logging.info("[tmp_file_set] path: %s", tmp_file_path)
     return tmp_file_path
 
@@ -86,9 +85,12 @@ def store_file_from_bytes(bytesio: io.BytesIO, file_key: str) -> None:
 
 def store_file_from_path(file_path: str, file_key: str) -> None:
     logging.info("[store_file_from_path] upload start: '%s/%s'", bucket, file_key)
-    with open(file_path, 'rb') as file_data:
-        s3.upload_fileobj(file_data, bucket, file_key)
-    logging.info("[store_file_from_path] upload finish: '%s/%s'", bucket, file_key)
+    try:
+        s3.upload_file(file_path, bucket, file_key) # v2: using filepath bc we don't need to load fileobj into mem
+        logging.info("[store_file_from_path] upload finish: '%s/%s'", bucket, file_key)
+    except Exception as upload_file_err:
+        logging.info("[store_file_from_path] upload error: '%s'", upload_file_err)
+        raise upload_file_err
 
 # --- getters
 def get_stored_file_url(file_key: str) -> str:
