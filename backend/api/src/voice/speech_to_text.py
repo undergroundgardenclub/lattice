@@ -40,38 +40,40 @@ def speech_to_text(file_url: Optional[str] = None, transcript_id: Optional[str] 
         sleep(1)
         
     # PROCESS (crude words -> sentences + full text construction)
-    print(f"[speech_to_text] processing {t_id}") # transcript_response
+    print(f"[speech_to_text] words2sentences: {t_id}") # transcript_response
     # --- sentences
     sentences = []
     sentence_milliseconds_start = None
     sentence_milliseconds_end = None
     sentence_text_fragments = []
-    for word in transcript_response['words']:
-        if (sentence_milliseconds_start == None): sentence_milliseconds_start = word['start']
-        sentence_milliseconds_end = word['end']
-        sentence_text_fragments.append(word['text'])
-        # print("[speech_to_text] word", word)
-        # --- if contains a period and word length is significant
-        if (_.has_substr(word['text'], ".") and len(word['text']) > 3 and len(" ".join(sentence_text_fragments)) > TOKENIZING_STRING_SENTENCE_SPLIT_MIN_LENGTH):
-            sentence = {
-                "text": " ".join(sentence_text_fragments),
-                "second_start": math.floor(sentence_milliseconds_start / 1000),
-                "second_end": math.floor(sentence_milliseconds_end / 1000),
-            }
-            # print("[speech_to_text] sentence", sentence)
-            sentences.append(sentence)
-            sentence_text_fragments = []
-            sentence_milliseconds_start = None
-            sentence_milliseconds_end = None
+    try:
+        for word in transcript_response['words']:
+            if (sentence_milliseconds_start == None): sentence_milliseconds_start = word['start']
+            sentence_milliseconds_end = word['end']
+            sentence_text_fragments.append(word['text'])
+            # print("[speech_to_text] word", word)
+            # --- if contains a period and word length is significant
+            if (_.has_substr(word['text'], ".") and len(word['text']) > 3 and len(" ".join(sentence_text_fragments)) > TOKENIZING_STRING_SENTENCE_SPLIT_MIN_LENGTH):
+                sentence = {
+                    "text": " ".join(sentence_text_fragments),
+                    "second_start": math.floor(sentence_milliseconds_start / 1000),
+                    "second_end": math.floor(sentence_milliseconds_end / 1000),
+                }
+                # print("[speech_to_text] sentence", sentence)
+                sentences.append(sentence)
+                sentence_text_fragments = []
+                sentence_milliseconds_start = None
+                sentence_milliseconds_end = None
 
-    # --- if no sentence was formed (ex: a few words, broken up by periods), then put all words in as one
-    if len(sentences) == 0:
-        sentences = [{
-            "text": " ".join([w['text'] for w in transcript_response['words']]),
-            "second_start": math.floor(transcript_response['words'][0]['start'] / 1000),
-            "second_end": math.floor(transcript_response['words'][-1]['end'] / 1000),
-        }]
-
+        # --- if no sentence was formed (ex: a few words, broken up by periods), then put all words in as one
+        if len(sentences) == 0:
+            sentences = [{
+                "text": " ".join([w['text'] for w in transcript_response['words']]),
+                "second_start": math.floor(transcript_response['words'][0]['start'] / 1000),
+                "second_end": math.floor(transcript_response['words'][-1]['end'] / 1000),
+            }]
+    except Exception as sentence_err:
+        print(f"[speech_to_text] words2sentences error: {t_id}")
 
     # RETURN
     results = {
