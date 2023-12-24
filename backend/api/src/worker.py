@@ -15,7 +15,8 @@ queue_redis_opts = dict(host=env_queue_host(),port=env_queue_port())
 # --- worker config
 # job opts/locks (play with "stall" criteria. jobs being processed that are moved into "stalled" position, that then finish, throw a "lock not found" error)
 # read more: https://github.com/OptimalBits/bull/issues/1591#issuecomment-567300561 / https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#queue / https://github.com/OptimalBits/bull/discussions/2156#discussioncomment-1294458
-queue_worker_opts = { "maxStalledCount": 0 }
+# lock durations default to 30 seconds, extend if long running jobs
+queue_worker_opts = { "connection": queue_redis_opts, "maxStalledCount": 0 }
 
 
 # WORK
@@ -28,13 +29,13 @@ def pfw(processor_fn):
 
 async def work():
     # --- actors
-    w_actor_act = Worker("actor_act", pfw(pf_actor_act), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
-    w_actor_action_describe_device_manual = Worker("actor_action_describe_device_manual", pfw(pf_actor_action_describe_device_manual), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
-    w_actor_action_question_answer = Worker("actor_action_question_answer", pfw(pf_actor_action_question_answer), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
-    w_actor_action_recordings_get_clip = Worker("actor_action_recordings_get_clip", pfw(pf_actor_action_recordings_get_clip), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
-    w_actor_action_recordings_summarizer = Worker("actor_action_recordings_summarizer", pfw(pf_actor_action_recordings_summarizer), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
+    w_actor_act = Worker("actor_act", pfw(pf_actor_act), { **queue_worker_opts })
+    w_actor_action_describe_device_manual = Worker("actor_action_describe_device_manual", pfw(pf_actor_action_describe_device_manual), { **queue_worker_opts, "lockDuration": 1000 * 60 * 2 })
+    w_actor_action_question_answer = Worker("actor_action_question_answer", pfw(pf_actor_action_question_answer), { **queue_worker_opts, "lockDuration": 1000 * 60 * 2 })
+    w_actor_action_recordings_get_clip = Worker("actor_action_recordings_get_clip", pfw(pf_actor_action_recordings_get_clip), { **queue_worker_opts, "lockDuration": 1000 * 60 * 15 })
+    w_actor_action_recordings_summarizer = Worker("actor_action_recordings_summarizer", pfw(pf_actor_action_recordings_summarizer), { **queue_worker_opts, "lockDuration": 1000 * 60 * 15 })
     # --- devices
-    w_device_ingest_recording = Worker("device_ingest_recording", pfw(pf_device_ingest_recording), { **queue_worker_opts, "connection": queue_redis_opts, "lockDuration": 1000 * 60 * 5 }) # 5 min job lock allowed (default is 30 seconds). should override per queue
+    w_device_ingest_recording = Worker("device_ingest_recording", pfw(pf_device_ingest_recording), { **queue_worker_opts })
     # ... keep workers alive
     while True:
         await asyncio.sleep(1)
