@@ -46,16 +46,21 @@ def led_pattern(pattern_type: str = None):
     current_led_state = led_main.value
     # --- set pattern
     num_blinks = 1
-    delay_blinks = 0.25
-    if pattern_type == "error":
-        num_blinks = 30
+    delay_blinks = 0.1
+    if pattern_type == "blink":
+        num_blinks = 1
         delay_blinks = 0.1
+    elif pattern_type == "error":
+        num_blinks = 15
+        delay_blinks = 0.1
+
     # --- execute pattern
     for i in range(num_blinks):
         led_main.value = True
         time.sleep(delay_blinks)
         led_main.value = False
         time.sleep(delay_blinks)
+
     # --- return to prior state
     led_main.value = current_led_state
 
