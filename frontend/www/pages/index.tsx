@@ -5,16 +5,26 @@ import React from "react";
 import styled from "styled-components";
 
 const size = 4;
-
 const taskNames = ["Pipetting", "Colony Count", "Mini-Prep", "Glycerol Stock"];
+
+const metaTitle = "LATTICE";
+const metaDescription = "Infrastructure for Generative Scientific Revolution";
+const metaImage = "/labjack.png";
 
 const IndexPage = () => {
   // RENDER
   return (
     <>
       <Head>
-        <title>LATTICE</title>
-        <meta name="description" content={"Queryable Scientific Infrastructure"} />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:image" content={metaImage} />
+        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <meta name="twitter:image" content={metaImage} />
       </Head>
       <StyledIndexPage>
         <main>
@@ -30,7 +40,7 @@ const IndexPage = () => {
                 </a> */}
               </p>
               <p>
-                If you want a LABJACK and/or to join me in building robotic infrastructure for the generative AI
+                If you want a LABJACK and/or to join me in building robotic infrastructure for the generative
                 scientific revolution (so we can engineer catalysts & microbes to fight climate change), let's talk:
                 <br />
                 <a href="mailto:x@markthemark.com">mail</a> /{" "}
