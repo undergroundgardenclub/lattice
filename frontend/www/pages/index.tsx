@@ -9,7 +9,7 @@ const taskNames = ["Pipetting", "Colony Count", "Mini-Prep", "Glycerol Stock"];
 
 const metaTitle = "LATTICE";
 const metaDescription = "Infrastructure To Scale with Generative Scientific Work";
-const metaImage = "/lablinkvideoset.png";
+const metaImage = "/lablinkvideoset.jpg";
 
 const IndexPage = () => {
   // RENDER
