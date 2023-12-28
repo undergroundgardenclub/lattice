@@ -8,7 +8,7 @@ const size = 4;
 const taskNames = ["Pipetting", "Colony Count", "Mini-Prep", "Glycerol Stock"];
 
 const metaTitle = "LATTICE";
-const metaDescription = "Infrastructure for Generative Scientific Revolution";
+const metaDescription = "Infrastructure To Scale with Generative Scientific Work";
 const metaImage = "/labjack.png";
 
 const IndexPage = () => {
