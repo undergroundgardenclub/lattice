@@ -30,18 +30,18 @@ const IndexPage = () => {
         <main>
           <div className="info">
             <h1>LATTICE</h1>
-            <h2>LabJack</h2>
+            <h2>LABLINK</h2>
             <section>
               <p>
-                <u>Wearable A.I. assistant for researchers and labs</u>.<br /> Voice commands for documenting work,
-                video replays, internal lab knowledge base queries, and more...
+                <u>Wearable A.I. assistant for researchers</u>.<br /> Auto-document lab work, send
+                video clips to collaborators, query an audio/video knowledge base, and more with your voice...
                 {/* <a href="https://undergroundgarden.club" target="_blank">
                   Underground Garden Club
                 </a> */}
               </p>
               <p>
-                If you want a LABJACK and/or to join me in building robotic infrastructure for the generative
-                scientific revolution (so we can engineer catalysts & microbes to fight climate change), let's talk:
+                Looking for cofounders to join me in building robotic infrastructure for the next wave of generative
+                scientific experimentation. Let's talk:
                 <br />
                 <a href="mailto:x@markthemark.com">mail</a> /{" "}
                 <a href="https://www.linkedin.com/in/markdghansen/" target="_blank" rel="noreferrer">
@@ -90,10 +90,10 @@ export const StyledIndexPage = styled.div`
   bottom: 0;
   z-index: 0;
   overflow: hidden;
-  background-color: #00f;
-  background-image: linear-gradient(to right, #00a 1px, transparent 1px),
-    linear-gradient(to bottom, #00a 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-color: #fff;
+  background-image: linear-gradient(to right, #efefef 1px, transparent 1px),
+    linear-gradient(to bottom, #efefef 1px, transparent 1px);
+  background-size: 40px 40px;
 
   h1,
   h2 {
@@ -112,7 +112,7 @@ export const StyledIndexPage = styled.div`
     .info {
       max-width: 640px;
       margin: 120px 40px 0;
-      color: #0d0;
+      color: #000;
       h2 {
         font-size: 96px;
       }
@@ -123,8 +123,8 @@ export const StyledIndexPage = styled.div`
         margin: 12px 0;
         font-weight: 900;
         line-height: 140%;
-        color: #0f0;
-        background: blue;
+        color: #000;
+        background: #fff;
       }
       a {
         color: inherit;
@@ -156,14 +156,14 @@ export const StyledIndexPage = styled.div`
   @media (min-width: 1240px) {
     main {
       .info {
-        margin: 180px 180px;
+        margin: 180px 120px;
         h2 {
           font-size: 140px;
         }
       }
     }
     .lattice {
-      margin: 80px 820px 0 auto;
+      margin: 80px 720px 0 auto;
     }
   }
 `;
@@ -177,7 +177,7 @@ export const StyledLatticeSlice = styled.div<{ sliceIndex: number }>`
   }}
   display: flex;
   .lattice__slice__row__title {
-    color: #0d0;
+    color: #000;
     width: 64px;
     text-align: right;
     font-family: "Stonewall 50";
@@ -186,8 +186,8 @@ export const StyledLatticeSlice = styled.div<{ sliceIndex: number }>`
   .lattice__slice__row__item {
     margin: 12px;
     padding: 0;
-    border: 4px solid #0d0;
-    background: #00f;
+    border: 4px solid #000;
+    background: #000;
     max-width: 180px;
     display: flex;
     justify-content: center;
