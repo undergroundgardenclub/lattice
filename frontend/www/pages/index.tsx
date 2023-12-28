@@ -177,7 +177,7 @@ export const StyledLatticeSlice = styled.div<{ sliceIndex: number }>`
     margin: 12px;
     padding: 0;
     border: 4px solid #0d0;
-    background: #0d0;
+    background: #00f;
     max-width: 180px;
     display: flex;
     justify-content: center;
