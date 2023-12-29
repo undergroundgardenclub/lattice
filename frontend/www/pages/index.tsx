@@ -41,8 +41,8 @@ const IndexPage = () => {
                 </a> */}
               </p>
               <p>
-                Looking for cofounders to join me in building robotic infrastructure for the next wave of generative
-                scientific experimentation. Let's talk:
+                Want to build robotic infrastructure for the next wave of generative
+                scientific experimentation? Let's talk:
                 <br />
                 <a href="mailto:x@markthemark.com">mail</a> /{" "}
                 <a href="https://www.linkedin.com/in/markdghansen/" target="_blank" rel="noreferrer">
@@ -164,7 +164,7 @@ export const StyledIndexPage = styled.div`
       }
     }
     .lattice {
-      margin: 80px 720px 0 auto;
+      margin: 80px 620px 0 auto;
     }
   }
 `;
