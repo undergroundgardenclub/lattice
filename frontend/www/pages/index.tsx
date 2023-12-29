@@ -4,7 +4,8 @@ import Head from "next/head";
 import React from "react";
 import styled from "styled-components";
 
-const size = 4;
+const numSlices = 4;
+const sliceSize = 3;
 const taskNames = ["Pipetting", "Colony Count", "Mini-Prep", "Glycerol Stock"];
 
 const metaTitle = "LATTICE";
@@ -52,20 +53,20 @@ const IndexPage = () => {
           </div>
         </main>
         <div className="lattice">
-          {range(0, size).map((sl, slIdx) => (
+          {range(0, numSlices).map((sl, slIdx) => (
             <StyledLatticeSlice sliceIndex={slIdx}>
               <div className="lattice__slice__row__title">
                 Task {4 - slIdx - 1}:<br />
                 {taskNames[4 - slIdx - 1]}
               </div>
-              {range(0, size).map((row, rowIdx) => (
+              {range(0, sliceSize).map((row, rowIdx) => (
                 <div className="lattice__slice__row">
-                  {range(0, size).map((col, colIdx) => (
+                  {range(0, sliceSize).map((col, colIdx) => (
                     <div className="lattice__slice__row__item">
                       {/* flipping order bc i like the pipettes in front */}
                       <video
-                        key={`${size - (slIdx + 1)}-${rowIdx}${colIdx}`}
-                        src={`/clips/${size - (slIdx + 1)}-${rowIdx}${colIdx}.mp4`}
+                        key={`${numSlices - (slIdx + 1)}-${rowIdx}${colIdx}`}
+                        src={`/clips/${numSlices - (slIdx + 1)}-${rowIdx}${colIdx}.mp4`}
                         autoPlay
                         loop
                         muted
@@ -134,7 +135,7 @@ export const StyledIndexPage = styled.div`
 
   .lattice {
     width: 0;
-    margin: 40px 620px 0 auto;
+    margin: 40px 420px 0 auto;
   }
 
   @media (max-width: 45em) {
