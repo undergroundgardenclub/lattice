@@ -34,8 +34,7 @@ const IndexPage = () => {
             <h2>LABLINK</h2>
             <section>
               <p>
-                <u>Wearable A.I. assistant for researchers</u>.<br /> Auto-document lab work, send video clips to
-                collaborators, query an audio/video knowledge base, and more with your voice...
+                <u>Wearable A.I. assistant for researchers</u>.<br /> Auto-document lab work, create video clips, query an audio/video knowledge base, and more with your voice...
                 {/* <a href="https://undergroundgarden.club" target="_blank">
                   Underground Garden Club
                 </a> */}
