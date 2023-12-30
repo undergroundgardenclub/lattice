@@ -34,17 +34,14 @@ const IndexPage = () => {
             <h2>LABLINK</h2>
             <section>
               <p>
-                <u>Wearable A.I. assistant for researchers</u>.<br /> Auto-document lab work, send
-                video clips to collaborators, query an audio/video knowledge base, and more with your voice...
+                <u>Wearable A.I. assistant for researchers</u>.<br /> Auto-document lab work, send video clips to
+                collaborators, query an audio/video knowledge base, and more with your voice...
                 {/* <a href="https://undergroundgarden.club" target="_blank">
                   Underground Garden Club
                 </a> */}
               </p>
               <p>
-                Want to build robotic infrastructure for the next wave of generative
-                scientific experimentation? Let's talk:
-                <br />
-                <a href="mailto:x@markthemark.com">mail</a> /{" "}
+                Want one? Let's talk: <a href="mailto:x@markthemark.com">mail</a> /{" "}
                 <a href="https://www.linkedin.com/in/markdghansen/" target="_blank" rel="noreferrer">
                   linkedin
                 </a>
