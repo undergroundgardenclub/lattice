@@ -75,7 +75,6 @@ async def _pf_actor_act(device_id: str, series_id: str, query_media_file_dict: d
     elif query_tool_name == at.tools["send_recording_series_summary_email"]["name"]:
         await queue_add_job(queues['actor_action_recordings_summarizer'], {
             "device_id": device_id,
-            "series_id": series_id, # not used btw
             "interval_unit": query_tool_args.get("interval_unit"),
             "interval_num": query_tool_args.get("interval_num"),
             "to_email": env_email_to_test(),

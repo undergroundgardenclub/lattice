@@ -2,24 +2,23 @@ from datetime import datetime, timedelta
 import json
 import sqlalchemy as sa
 from sqlalchemy import func
-from actor.actions.recordings_summarize.recordings_summarizer import recordings_summarizer
+from actor.actions.recordings_summarize.recordings_html_summarizer import recordings_html_summarizer
 from emails.send_email import send_email
 from orm import sa_sessionmaker
 from recording.Recording import Recording
 
 
-async def _pf_actor_action_recordings_summarizer(device_id: str, series_id: str, interval_unit: str, interval_num: int, to_email: str):
+async def _pf_actor_action_recordings_summarizer(device_id: str, interval_unit: str, interval_num: int, to_email: str):
     # PARAMS
-    # --- parse interval size/num off query args
     if interval_unit  == "days":
         date_to_check = (datetime.now() - timedelta(days=interval_num)).date()
     else:
-        raise BaseException(f"Unexpected 'interval_unit': {interval_unit}")
+        date_to_check = datetime.now().date()
     # QUERY RECORDINGS
+    print(f"[_pf_actor_action_recordings_summarizer] querying recordings on date: {date_to_check}")
     recordings = []
     session = sa_sessionmaker()
     async with session.begin():
-        print(f"[_pf_actor_action_recordings_summarizer] querying recordings on date: {date_to_check}")
         query_recordings = await session.execute(
             sa.select(Recording)
                 .where(sa.and_(
@@ -34,7 +33,7 @@ async def _pf_actor_action_recordings_summarizer(device_id: str, series_id: str,
     if len(recordings) == 0:
         raise "No recordings found"
     # SUMMARIZE
-    summary_html = recordings_summarizer(recordings, to_email=to_email)
+    summary_html = await recordings_html_summarizer(recordings)
     print(f"[_pf_actor_action_recordings_summarizer] summarized recordings")
     # EMAIL
     send_email(
@@ -49,12 +48,11 @@ async def pf_actor_action_recordings_summarizer(job, job_token):
     try:
         # --- get params
         device_id = job.data.get("device_id")
-        series_id = job.data.get("series_id")
         interval_unit = job.data.get("interval_unit")
         interval_num = job.data.get("interval_num")
         to_email = job.data.get("to_email")
         # --- strinigfy payload to transfer over the wire
-        payload = await _pf_actor_action_recordings_summarizer(device_id, series_id, interval_unit, interval_num, to_email)
+        payload = await _pf_actor_action_recordings_summarizer(device_id, interval_unit, interval_num, to_email)
         return json.dumps(payload)
     except Exception as pf_err:
         print(f"[pf_actor_action_recordings_summarizer] error: ", pf_err)

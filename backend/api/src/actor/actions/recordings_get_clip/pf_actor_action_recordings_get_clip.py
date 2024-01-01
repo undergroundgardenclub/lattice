@@ -48,7 +48,7 @@ async def _pf_actor_action_recordings_get_clip(device_id: str, to_email: str, ty
     try:
         await rsm.load_recordings(recordings)
         if type == "step": # if we're a step type, we need to filter down further based on annotations
-            step_recordings = rsm.get_recordings_for_described_step(step_description_text)
+            step_recordings = rsm.get_recordings_for_step(query_text=step_description_text)
             rsm.join_recordings(step_recordings)
             rsm.store_series_recording()
         else: # otherwise, just join all the recordings we grabbed earlier
