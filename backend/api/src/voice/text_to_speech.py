@@ -4,7 +4,10 @@ import env
 
 CHUNK_SIZE = 1024
 
-def text_to_speech(text: str, voice_id="Zlb1dXrM653N07WRdFW3", output_format="mp3_44100_64") -> BytesIO:
+VOICE_ID_JOSEPH = "Zlb1dXrM653N07WRdFW3"
+VOICE_ID_PAUL = "5Q0t7uMcjvnagumLfvZi"
+
+def text_to_speech(text: str, voice_id=VOICE_ID_JOSEPH, output_format="mp3_44100_64") -> BytesIO:
     print(f"[text_to_speech]: '{text}'")
     headers = {
         "Accept": "audio/mpeg",
@@ -13,7 +16,7 @@ def text_to_speech(text: str, voice_id="Zlb1dXrM653N07WRdFW3", output_format="mp
     }
     json = {
     "text": text,
-    "model_id": "eleven_monolingual_v1", # "eleven_turbo_v2",
+    "model_id": "eleven_monolingual_v1", # turbo is pretty rough, "eleven_turbo_v2",
     "voice_settings": {
         "stability": 0,
         "similarity_boost": 0,
