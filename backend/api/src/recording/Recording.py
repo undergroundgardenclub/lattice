@@ -1,5 +1,6 @@
 from sqlalchemy import Column, DateTime, Float, Integer, Text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship
 from orm import BaseModel
 
 
@@ -18,6 +19,8 @@ class Recording(BaseModel):
     transcript_text = Column(Text())
     transcript_sentences = Column(JSONB())
     transcript_words = Column(JSONB())
+    # --- relations
+    recording_annotation = relationship("RecordingAnnotation", back_populates="recording")
     
     def serialize(self, serialize_relationships=[]):
         return {

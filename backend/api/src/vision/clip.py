@@ -9,22 +9,25 @@ processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
 
 # ENCODINGS
-def clip_encode(images: List, text: List):
+def clip_encode(images: List = [], text: List = []):
     print(f"[clip_encode] {len(images)} images, {len(text)} text")
+    image_outputs = None
+    text_outputs = None
     # process
     with torch.no_grad():
         # --- images
-        if images is not None:
+        if images is not None and len(images) > 0:
             # process inputs (do I need to transform images? Or can I pass in if they're PNGs aka video frames from CV2) -> embeddings
             image_inputs = processor(images=images, return_tensors="pt", padding=True)
             image_outputs = model.get_image_features(**image_inputs)
         # --- text
-        if text is not None:
+        if text is not None and len(text) > 0:
             # process inputs -> embeddings
-            text_inputs = processor(text=text, return_tensors="pt", padding=True)
+            text_shortened = list(map(lambda t: t[:140], text)) # 77 token limit
+            text_inputs = processor(text=text_shortened, return_tensors="pt", padding=True)
             text_outputs = model.get_text_features(**text_inputs)
-        # return embeddings
-        return image_outputs, text_outputs
+    # return embeddings
+    return image_outputs, text_outputs
 
 
 # CALCS
