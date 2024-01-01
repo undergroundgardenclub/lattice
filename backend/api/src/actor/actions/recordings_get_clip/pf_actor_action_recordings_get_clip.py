@@ -32,9 +32,11 @@ async def _pf_actor_action_recordings_get_clip(device_id: str, to_email: str, ty
             sa.select(Recording)
                 .where(sa.and_(
                     Recording.device_id == str(device_id),
+                     # TODO: include records that cover this time period, even if created_at, or save an end_at and just use that
                     Recording.created_at > starting_time_for_scope,
                     Recording.created_at < ending_time_for_scope,
-                )) # TODO: include records that cover this time period, even if created_at, or save an end_at and just use that
+                    # TODO: should probably filter out recordings without a series (ex: stray questions asked outside of recordings get roped in)
+                ))
                 .order_by(Recording.id.asc()))
         recordings = query_recordings.scalars().unique().all()
     await session.close()

@@ -24,6 +24,7 @@ async def _pf_actor_action_recordings_summarizer(device_id: str, interval_unit: 
                 .where(sa.and_(
                     Recording.device_id == str(device_id),
                     func.date(Recording.created_at) == date_to_check
+                    # TODO: should probably filter out recordings without a series (ex: stray questions asked outside of recordings get roped in)
                 ))
                 .order_by(Recording.id.asc()))
         recordings = query_recordings.scalars().unique().all()
