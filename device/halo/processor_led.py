@@ -1,3 +1,4 @@
+import json
 import logging
 import time
 from utils_api import req_tracking_event
@@ -32,6 +33,7 @@ def processor_led(pe, pq):
 
         except Exception as proc_err:
             logging.error('[processor_led] error: %s', proc_err)
+            pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/an_error_has_occurred.mp3" }) })
             pq["queue_led"].put({ "type": "error" })
             req_tracking_event({ "type": "device_exception", "data": { "device_processor_name": "processor_led", "error_message": proc_err } })
 

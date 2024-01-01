@@ -7,15 +7,15 @@ from env import env_api_url, env_device_id
 
 # RECORDINGS
 # --- series
-def req_recording_series_submit(media_file_dict: dict, series_id: str):
-    logging.info("[req_recording_series_submit] sending recording")
+def req_recording_series_send(media_file_dict: dict, series_id: str):
+    logging.info("[req_recording_series_send] sending recording")
     try:
         response = requests.post(env_api_url() + "/v1/device/ingest/recording", data=json.dumps({ "device_id": env_device_id(), "series_id": series_id, "media_file_dict": media_file_dict }))
         response_json = response.json()
-        logging.info('[req_recording_series_submit] response: ', response_json)
+        logging.info('[req_recording_series_send] response: ', response_json)
         return
     except Exception as err:
-        logging.error("[req_recording_series_submit] error: ", err)
+        logging.error("[req_recording_series_send] error: ", err)
         return
 
 

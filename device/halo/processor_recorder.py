@@ -146,9 +146,10 @@ def processor_recorder(pe, pq): # process_events, process_queues
                 # --- slight pause to slow cpu cycles
                 time.sleep(0.01)
 
-    except Exception as proc_camera_err
+    except Exception as proc_camera_err:
         logging.info('[processor_recorder] error: %s', proc_camera_err)
         req_tracking_event({ "type": "device_exception", "data": { "device_processor_name": "processor_recorder", "error_message": proc_camera_err } })
+        pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/an_error_has_occurred.mp3" }) })
         pq["queue_led"].put({ "type": "error" })
         pq["queue_led"].put({ "type": "off" })
         sys.exit(1) # attempting to trigger garbage clean up on this process and any references in case we hit a CmaFree allocation issue. main will restart proc

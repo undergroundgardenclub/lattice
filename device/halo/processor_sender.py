@@ -1,6 +1,7 @@
+import json
 import logging
 import time
-from utils_api import req_query, req_recording_series_submit, req_tracking_event
+from utils_api import req_query, req_recording_series_send, req_tracking_event
 from utils_device import EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_SEND_SERIES_RECORDING, EVENT_TYPE_SEND_QUERY_RECORDING
 from utils_files import delete_file, store_file_from_path, get_stored_file_url
 from utils_media import combine_h264_and_wav_into_mp4
@@ -47,7 +48,7 @@ def processor_sender(pe, pq):
                     if job_type == EVENT_TYPE_SEND_QUERY_RECORDING:
                         req_query(dict(file_key=file_key_mp4, file_url=file_url_mp4), series_id=job_data.get("series_id"))
                     elif job_type == EVENT_TYPE_SEND_SERIES_RECORDING:
-                        req_recording_series_submit(dict(file_key=file_key_mp4, file_url=file_url_mp4), series_id=job_data.get("series_id"))
+                        req_recording_series_send(dict(file_key=file_key_mp4, file_url=file_url_mp4), series_id=job_data.get("series_id"))
 
                     # CLEAN
                     # --- clean up files (+ meta )
@@ -60,6 +61,7 @@ def processor_sender(pe, pq):
 
         except Exception as proc_err:
             logging.error('[processor_sender] error: %s', proc_err)
+            pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/an_error_has_occurred.mp3" }) })
             pq["queue_led"].put({ "type": "error" })
             req_tracking_event({ "type": "device_exception", "data": { "device_processor_name": "processor_sender", "error_message": proc_err } })
 

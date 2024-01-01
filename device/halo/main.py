@@ -86,10 +86,12 @@ def interaction_press_triple(pe, pq):
         now = time.time()
         pq['queue_recorder_series'].put({ "type": EVENT_TYPE_RECORD_SERIES, "data": { "media_id": generate_media_id(), "series_id": series_id, "start_sec": now, "segment_start_sec": now } })
         pe["event_is_recording_series"].set()
+        pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/recording_started.mp3" }) })
     else:
         pe["event_is_recording_series"].clear()
         pq['queue_sender'].put({ "type": EVENT_TYPE_SEND_SERIES_DONE, "data": { "series_id": series_id } })
         series_id = None
+        pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/recording_stopped.mp3" }) })
 
 # --- long press
 def interaction_press_long(pe, pq, is_button_pressed):
@@ -98,8 +100,10 @@ def interaction_press_long(pe, pq, is_button_pressed):
     if is_button_pressed == True and pe["event_is_recording_query"].is_set() == False:
         pq['queue_recorder_query'].put({ "type": EVENT_TYPE_RECORD_QUERY, "data": { "media_id": generate_media_id(), "series_id": series_id, "start_sec": time.time() } })
         pe["event_is_recording_query"].set()
+        pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/yes.mp3" }) })
     elif is_button_pressed == False and pe["event_is_recording_query"].is_set() == True:
         pe["event_is_recording_query"].clear()
+        pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/working_on_it.mp3" }) })
 
 
 # PROCESSOR/LOOP
@@ -179,22 +183,24 @@ while True:
             logging.info("[device_message] processing: %s %s", next_message_type, next_message_data)
             # ... execute
             if (next_message_type == EVENT_TYPE_PLAY_AUDIO):
-                audio_bytes = get_file_bytes(next_message_data.get("file_url"))
+                audio_bytes = get_file_bytes(next_message_data.get("file_path") or next_message_data.get("file_url")) # local files for audio cues of actions
                 play_audio(audio_bytes, is_blocking=False)
 
 
         # PROCESS HEALTH CHECKS
         # --- ensure processors are still running (check if we can just start() or we need to redefine)
         if ps_processor_recorder.is_alive() == False:
-            logging.info("[loop] 'ps_processor_recorder' dead, starting again")
+            logging.info("[loop] 'ps_processor_recorder' is_alive = %s, starting again", ps_processor_recorder.is_alive())
             ps_processor_recorder = multiprocessing.Process(target=processor_recorder_fork, args=(process_events, process_queues))
             ps_processor_recorder.start()
+            ps_processor_recorder.is_alive()
+            logging.info("[loop] 'ps_processor_recorder' is_alive = %s, starting again", ps_processor_recorder.is_alive())
         if ps_processor_sender.is_alive() == False:
-            logging.info("[loop] 'ps_processor_sender' dead, starting again")
+            logging.info("[loop] 'ps_processor_sender' is_alive = %s, starting again", ps_processor_sender.is_alive())
             ps_processor_sender = threading.Thread(target=processor_sender_fork, args=(process_events, process_queues))
             ps_processor_sender.start()
         if ps_processor_led.is_alive() == False:
-            logging.info("[loop] 'ps_processor_led' dead, starting again")
+            logging.info("[loop] 'ps_processor_led' is_alive = %s, starting again", ps_processor_led.is_alive())
             ps_processor_led = threading.Thread(target=processor_led_fork, args=(process_events, process_queues))
             ps_processor_led.start()
 
@@ -202,6 +208,7 @@ while True:
     except Exception as main_err:
         logging.error("[loop] error: %s", main_err)
         process_queues["queue_led"].put({ "type": "error" })
+        process_queues["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/an_error_has_occurred.mp3" }) })
         req_tracking_event({ "type": "device_exception", "data": { "device_processor_name": "main", "error_message": main_err } })
 
     time.sleep(0.01)  # if we slow delay, button interactivity becomes wonky, keep at 0.01
