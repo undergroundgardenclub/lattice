@@ -13,9 +13,6 @@ openai_client = OpenAI(api_key=env_open_ai_api_key())
 
 
 # QUERY
-# --- tool/action requests
-
-
 # --- query action decision making enum
 def prompt_determine_actor_tool(input_text: str):
     print(f"[prompt_determine_actor_tool] querying")
@@ -129,3 +126,42 @@ def prompt_query_general_question_answer(input_text: str, question_image_arr: np
     return response_text
 
 
+# TEXT UTILS
+# --- grammar fixing, slight clean up
+def prompt_clean_up_text(input_text: str, extra_instruction_text: str = None):
+    print(f"[prompt_clean_up_text] querying")
+    response = openai_client.chat.completions.create(
+        model="gpt-4-1106-preview",
+        response_format={ "type": "json_object" },
+        messages=[
+            { "role": "system", "content": f"You are a helpful assistant taking audio transcript text and refining grammar, fixing spelling mistakes, and removing words/phrases/adlibs that don't make sense in the context of the text. {extra_instruction_text or ''}. Respond in the JSON format, {{ 'text': str }}." },
+            { "role": "user", "content": input_text }
+        ],
+        temperature=0.2,
+    )
+    # parse response
+    data = json.loads(response.choices[0].message.content)
+    response_text = data['text']
+    print(f"[prompt_clean_up_text] response_text: {response_text}")
+    # return
+    return response_text
+
+
+# DATA STRUCTURING UTILS
+# --- given a data structure and instructions, form cols/rows
+def prompt_text_to_structured_data(input_text: str, instruct_context_text: str, instruct_schema_text: str):
+    print(f"[prompt_text_to_structured_data] querying")
+    response = openai_client.chat.completions.create(
+        model="gpt-4-1106-preview",
+        response_format={ "type": "json_object" },
+        messages=[
+            { "role": "system", "content": f"You are data focused assistant that needs to take a text based observation and return structured data that will be used for data processing as a CSV or in DataFrame. The context of this data processing: '{instruct_context_text}' Respond in the JSON format, {instruct_schema_text}." },
+            { "role": "user", "content": input_text }
+        ],
+        temperature=0.2,
+    )
+    # parse response
+    data = json.loads(response.choices[0].message.content)
+    print(f"[prompt_text_to_structured_data] response: {data}")
+    # return
+    return data
