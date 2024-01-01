@@ -6,7 +6,7 @@ from typing import List
 from openai import OpenAI
 from actor.actor_tools import ActorTools
 from env import env_open_ai_api_key
-from vision.cv import encoded_frame_to_base64
+from vision.cv import encoded_frame_jpg_to_base64
 
 
 openai_client = OpenAI(api_key=env_open_ai_api_key())
@@ -101,7 +101,7 @@ def prompt_recording_transcript_to_task_outline(transcripts_sentences: str, task
 def prompt_query_general_question_answer(input_text: str, question_image_arr: np.ndarray):
     print(f"[prompt_query_general_question_answer] querying")
     # encode image
-    base64_image = encoded_frame_to_base64(question_image_arr)
+    base64_image = encoded_frame_jpg_to_base64(question_image_arr)
     # query
     response = openai_client.chat.completions.create(
         # model="gpt-4-vision-preview", # I'd like faster queries on data, and visuals is less important for that
@@ -145,6 +145,62 @@ def prompt_clean_up_text(input_text: str, extra_instruction_text: str = None):
     print(f"[prompt_clean_up_text] response_text: {response_text}")
     # return
     return response_text
+
+# --- common summarization
+def prompt_simple_summary(input_text: str, extra_instruction_text: str = None):
+    print(f"[prompt_simple_summary] querying")
+    response = openai_client.chat.completions.create(
+        model="gpt-4-1106-preview",
+        response_format={ "type": "json_object" },
+        messages=[
+            { "role": "system", "content": f"You are a helpful assistant summarizing text. Do not use 3rd person language or write as an observer.{extra_instruction_text or ''}. Respond in the JSON format, {{ 'summary_text': str }}." },
+            { "role": "user", "content": input_text }
+        ],
+        temperature=0.2,
+    )
+    # parse response
+    data = json.loads(response.choices[0].message.content)
+    text = data['summary_text']
+    print(f"[prompt_simple_summary] text: {text}")
+    # return
+    return text
+
+def prompt_simple_title(input_text: str, extra_instruction_text: str = None):
+    print(f"[prompt_simple_summary] querying")
+    response = openai_client.chat.completions.create(
+        model="gpt-4-1106-preview",
+        response_format={ "type": "json_object" },
+        messages=[
+            { "role": "system", "content": f"You are a helpful assistant creating a tile from some text.{extra_instruction_text or ''}. Respond in the JSON format, {{ 'title_text': str }}." },
+            { "role": "user", "content": input_text }
+        ],
+        temperature=0.2,
+    )
+    # parse response
+    data = json.loads(response.choices[0].message.content)
+    text = data['title_text']
+    print(f"[prompt_simple_summary] text: {text}")
+    # return
+    return text
+
+# --- attributes extraction
+def prompt_simple_attributes_list(input_text: str, extra_instruction_text: str = None):
+    print(f"[prompt_simple_attributes_list] querying")
+    response = openai_client.chat.completions.create(
+        model="gpt-4-1106-preview",
+        response_format={ "type": "json_object" },
+        messages=[
+            { "role": "system", "content": f"You are a helpful assistant extractling a list of parameters, atrributes, and settings (ex: 'Microwave runs for 2 minutes', 'Water bath is 42C', 'Spin down for 2 minutes until seeing visible pellet'). If none are mentioned, just return an empty list.{extra_instruction_text or ''}. Respond in the JSON format, {{ 'attributes': string[] }}." },
+            { "role": "user", "content": input_text }
+        ],
+        temperature=0.2,
+    )
+    # parse response
+    data = json.loads(response.choices[0].message.content)
+    attributes_list = data['attributes']
+    print(f"[prompt_simple_attributes_list] attributes_list: {attributes_list}")
+    # return
+    return attributes_list
 
 
 # DATA STRUCTURING UTILS

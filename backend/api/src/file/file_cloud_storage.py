@@ -22,7 +22,7 @@ def store_file_from_bytes(bytesio: io.BytesIO, file_key: str) -> None:
     print(f"[store_file_from_bytes] upload finish: '{bucket}/{file_key}'")
 
 def store_file_from_path(file_path: str, file_key: str) -> None:
-    print(f"[store_file_from_path] upload start: '{bucket}/{file_key}'")
+    print(f"[store_file_from_path] upload start: '{file_path}' > '{bucket}/{file_key}'")
     with open(file_path, 'rb') as file_data:
         s3.upload_fileobj(file_data, bucket, file_key)
     print(f"[store_file_from_path] upload finish: '{bucket}/{file_key}'")
