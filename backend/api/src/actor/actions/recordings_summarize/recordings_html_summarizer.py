@@ -1,5 +1,5 @@
 from typing import List
-from actor.actions.recordings_summarize.fill_email_template_html import html_template_step_section, html_template_steps_body
+from emails.email_html_templates import html_template_step_section, html_template_steps_body
 from llms.prompts import prompt_simple_attributes_list, prompt_simple_summary, prompt_simple_title
 from recording.Recording import Recording
 from recording.RecordingSeriesManager import RecordingSeriesManager
