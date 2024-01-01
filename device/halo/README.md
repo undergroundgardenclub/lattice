@@ -1,5 +1,6 @@
 # Halo
 
+
 ## Setup Board
 
 ### Raspberry Pi OS
@@ -87,3 +88,7 @@ Check camera devices can be detected
 The pinout setup (that worked for my board at least)
 https://www.electrorules.com/raspberry-pi-4-gpio-pnout/
 
+
+## Debugging
+
+At the moment, not everything makes it to log files but everything makes it to stdout. When in doubt, just run `sudo bash setupd.sh` which will restart the service and get you listening to output. You may see exceptions crashing processes there.
