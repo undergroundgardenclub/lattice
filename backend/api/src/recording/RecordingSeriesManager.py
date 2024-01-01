@@ -2,7 +2,7 @@ import numpy as np
 import os
 import sqlalchemy as sa
 from sqlalchemy.orm import joinedload
-from typing import List
+from typing import List, Optional
 from uuid import uuid4
 from file.file_cloud_storage import get_stored_file_bytes, get_stored_file_url, store_file_from_path
 from file.file_utils import merge_media_files, tmp_file_path, tmp_file_rmv, tmp_file_set
@@ -10,23 +10,38 @@ from recording.Recording import Recording
 from recording.RecordingAnnotation import RecordingAnnotation
 from orm import sa_sessionmaker
 from vision.clip import clip_encode, clip_similarity
+from vision.cv import encode_frame_to_jpg, is_image_blurry, video_frame_generator
 
 
 class RecordingSeriesManager():
     # SETUP/PROPS
     # --- ids
-    series_id = None
+    series_id: Optional[str]
     # --- recordings
-    recordings: List[Recording] = []
-    recordings_duration_sec = 0
-    transcripts = []
-    transcripts_text: str = ""
-    transcripts_sentences = []
+    recordings: List[Recording]
+    recordings_duration_sec: int
+    transcripts: list[dict]
+    transcripts_text: str
+    transcripts_sentences: list[dict]
     # --- annotations
     recording_annotations: List[RecordingAnnotation] = []
     # --- extras loading/processing
-    series_recording_file_path: str = None
-    series_media_file_url: str = None
+    series_recording_file_path: str
+    series_media_file_url: str
+    # --- init (the above props are mutable class variables, not instance variables)
+    def __init__(self) -> None:
+        self.series_id = None
+        # --- recordings
+        self.recordings = []
+        self.recordings_duration_sec = 0
+        self.transcripts = []
+        self.transcripts_text = ""
+        self.transcripts_sentences = []
+        # --- annotations
+        self.recording_annotations = []
+        # --- extras loading/processing
+        self.series_recording_file_path = None
+        self.series_media_file_url = None
 
     # LOADERRS
     # --- load series (recordings + annotations)
@@ -89,46 +104,68 @@ class RecordingSeriesManager():
         self.recording_annotations = recording_annotations
 
 
+    # SELECTORS
     # --- selectors/filters for recordings (so we can join on them later)
-    def get_recordings_for_described_step(self, query_text: int) -> List[Recording]:
-        print(f"[RecordingSeriesManager.get_recordings_for_described_step] query_text: {query_text}")
+    def get_recordings_for_step(self, query_text: str = None, recording_annotation: RecordingAnnotation = None) -> List[Recording]:
+        print(f"[RecordingSeriesManager.get_recordings_for_step] query_text: {query_text}")
+        # FIND STEP
         # --- see what step_description_text most closely matches out of step descriptions (just gonna reuse clip, its prob good enough)
         step_ras = list(filter(lambda ra: ra.type == "step", self.recording_annotations))
-        # --- encode and check similarties
-        step_ras_strings = [ra.data.get('text') for ra in step_ras]
-        print(f"[RecordingSeriesManager.get_recordings_for_described_step] step_ras_strings: ", step_ras_strings)
-        _, step_text_encodings = clip_encode([], step_ras_strings)
-        _, query_text_encodings = clip_encode([], [query_text])
-        recording_annotation_similarities = clip_similarity(step_text_encodings, query_text_encodings[0]) # returns a list of 0 to 1 values mapping to list arg
-        recording_annotation_similarity_idx = np.argmax(recording_annotation_similarities)
-        print(f"[RecordingSeriesManager.get_recordings_for_described_step] similarities idx: ", recording_annotation_similarity_idx)
-        starting_recording_id = step_ras[recording_annotation_similarity_idx].recording_id
-        ending_recording_id = step_ras[recording_annotation_similarity_idx + 1].recording_id if step_ras[recording_annotation_similarity_idx + 1] != None else None
-        print(f"[RecordingSeriesManager.get_recordings_for_described_step] start/end recording ids: ", starting_recording_id, ending_recording_id)
+        recording_annotation_idx = None
+        # either check for query text similarities or exact match
+        if recording_annotation != None:
+            recording_annotation_idx = step_ras.index(recording_annotation)
+        elif query_text != None:
+            step_ras_strings = [ra.data.get('text') for ra in step_ras]
+            print(f"[RecordingSeriesManager.get_recordings_for_step] step_ras_strings: ", step_ras_strings)
+            _, step_text_encodings = clip_encode([], step_ras_strings)
+            _, query_text_encodings = clip_encode([], [query_text])
+            recording_annotation_similarities = clip_similarity(step_text_encodings, query_text_encodings[0]) # returns a list of 0 to 1 values mapping to list arg
+            recording_annotation_idx = np.argmax(recording_annotation_similarities)
+        print(f"[RecordingSeriesManager.get_recordings_for_step] annotation idx: ", recording_annotation_idx)
+        starting_recording_id = step_ras[recording_annotation_idx].recording_id
+        ending_recording_id = step_ras[recording_annotation_idx + 1].recording_id if len(step_ras) > (recording_annotation_idx + 1) else None
+        print(f"[RecordingSeriesManager.get_recordings_for_step] start/end recording ids: ", starting_recording_id, ending_recording_id)
         # --- get start/end recording ids for step
         segment_recordings = []
         for rec in self.recordings:
             if rec.id >= starting_recording_id and (rec.id < ending_recording_id if ending_recording_id != None else True):
                 segment_recordings.append(rec)
         # --- return
-        print(f"[RecordingSeriesManager.get_recordings_for_described_step] segment recordings #{len(segment_recordings)}")
+        print(f"[RecordingSeriesManager.get_recordings_for_step] segment recordings #{len(segment_recordings)}")
         return segment_recordings
-    
 
+    # --- grouping recordings by step annotation
+    def get_recordings_by_step(self) -> List[dict[RecordingAnnotation, List[Recording]]]:
+        print(f"[RecordingSeriesManager.get_recordings_for_steps] start")
+        # --- get steps
+        steps = list(filter(lambda ra: ra.type == "step", self.recording_annotations))
+        # --- get recordings for each step
+        step_recordings = []
+        for step in steps:
+            step_recordings.append({
+                "step": step,
+                "recordings": self.get_recordings_for_step(recording_annotation=step)
+            })
+        # --- return
+        return step_recordings
+
+    # VIDEO PROCESSING
     # --- series recording (allow passing in a slice)
     def join_recordings(self, recordings: List[Recording] = None) -> str:
-        print("[RecordingSeriesManager.join_recordings] start")
+        print(f"[RecordingSeriesManager.join_recordings] start ({len(recordings)} recordings)")
         self.series_recording_file_path = tmp_file_path("series_recording_")
         # --- merge to tmp file on disk (TODO: make this go faster)
         recording_keys = [rec.media_file_key for rec in (recordings)]
         recording_paths = []
         try:
-            print("[RecordingSeriesManager.join_recordings] downloading tmp files: ", recording_paths)
+            print("[RecordingSeriesManager.join_recordings] downloading tmp files: ", recording_keys)
             for rk in recording_keys:
                 bytes = get_stored_file_bytes(rk)
                 path = tmp_file_set(bytes, "mp4")
                 recording_paths.append(path)
             # --- merge
+            print("[RecordingSeriesManager.join_recordings] merging recording: ", self.series_recording_file_path)
             merge_media_files(recording_paths, self.series_recording_file_path)
         finally:
             # --- clean up tmp files needed for merge
@@ -157,3 +194,48 @@ class RecordingSeriesManager():
         self.series_media_file_url = get_stored_file_url(series_media_file_key)
         # --- return
         return series_media_file_key
+
+    # --- get frames
+    def get_frames(self, interval_seconds: int = 1, start_second: int = None, stop_second: int = None) -> List[np.ndarray]:
+        print("[RecordingSeriesManager.get_frames] start")
+        frames = []
+        for frame in video_frame_generator(self.series_recording_file_path, interval_seconds=interval_seconds, start_second=start_second, stop_second=stop_second):
+            frames.append(frame)
+        print("[RecordingSeriesManager.get_frames] got frames: ", len(frames))
+        return frames
+
+    # --- get frames subset for query (filters blurry as well)
+    def get_frames_query(self, query_text: str):
+        print(f"[RecordingSeriesManager.get_frames] start: {query_text}")
+        # --- get frames
+        frames_for_comparison = self.get_frames(interval_seconds=10) # doing a bit of an interval to get diverse picks
+        if len(frames_for_comparison) == 0:
+            return []
+        # --- filter blurry frames
+        frames_not_blurry_for_comparison = list(filter(lambda frame: not is_image_blurry(frame), frames_for_comparison))
+        print(f"[RecordingSeriesManager.get_frames] comparing {len(frames_not_blurry_for_comparison)} non-blurry frames")
+        # --- image similarity for frames (short circuit if no comparison images)
+        if len(frames_not_blurry_for_comparison) == 0:
+            return []
+        image_encodings, text_encodings = clip_encode(frames_not_blurry_for_comparison, [query_text])
+        image_similarities = clip_similarity(image_encodings, text_encodings[0])
+        # --- return top 3
+        def find_highest_indexes(lst, n=3):
+            return sorted(range(len(lst)), key=lambda i: lst[i], reverse=True)[:n]
+        indexes = find_highest_indexes(image_similarities)
+        # --- filter frames by indexes
+        frames = []
+        for idx in indexes:
+            frames.append(frames_not_blurry_for_comparison[idx])
+        # --- done!
+        return frames
+
+    def encode_frames_as(self, frames: List[np.ndarray], format: str, quality: int) -> List[bytes]:
+        print("[RecordingSeriesManager.encode_frames_as] start")
+        encoded_frames = []
+        # --- encode: jpg
+        if format == "jpg":
+            for frame in frames:
+                encoded_frames.append(encode_frame_to_jpg(frame, quality))
+        # --- return
+        return encoded_frames
