@@ -9,7 +9,7 @@ from recording.RecordingSeriesManager import RecordingSeriesManager
 
 async def _pf_actor_action_recordings_get_clip(device_id: str, to_email: str, type: str, interval_unit: str = None, interval_num: int | str = None, step_description_text: str = None):
     # PARAMS (treating default as past 24 hours)
-    if interval_unit  == "minutes":
+    if interval_unit == "minutes" and type == "interval": # if someones asking for a step, its not on a minutes scale
         starting_time_for_scope = datetime.now() - timedelta(minutes=int(interval_num))
         ending_time_for_scope = datetime.now()  + timedelta(hours=2)
     elif interval_unit  == "hours":
@@ -19,7 +19,7 @@ async def _pf_actor_action_recordings_get_clip(device_id: str, to_email: str, ty
         starting_time_for_scope = datetime.now() - timedelta(days=int(interval_num))
         ending_time_for_scope = datetime.now() - timedelta(days=int(interval_num) + 1)
     else:
-        starting_time_for_scope = datetime.now() - timedelta(hours=12) # asking for a 'step' 
+        starting_time_for_scope = datetime.now() - timedelta(hours=18) # asking for a 'step'
         ending_time_for_scope = datetime.now()
 
     # RECORDINGS FETCH
@@ -48,7 +48,8 @@ async def _pf_actor_action_recordings_get_clip(device_id: str, to_email: str, ty
     try:
         await rsm.load_recordings(recordings)
         if type == "step": # if we're a step type, we need to filter down further based on annotations
-            step_recordings = rsm.get_recordings_for_step(query_text=step_description_text)
+            step_annotation = rsm.get_similar_step_annotation(query_text=step_description_text)
+            step_recordings = rsm.get_recordings_for_step(recording_annotation=step_annotation)
             rsm.join_recordings(step_recordings)
             rsm.store_series_recording()
         else: # otherwise, just join all the recordings we grabbed earlier

@@ -18,6 +18,7 @@ async def _recordings_html_summarizer_from_annotations(recordings_by_step) -> st
             # --- generate summary/actions/bullets
             summary_text = prompt_simple_summary(step_rsm.transcripts_text)
             attributes_list = prompt_simple_attributes_list(step_rsm.transcripts_text)
+            # TODO: grab 'observations' annotations like looking at gels, plates, and add to email (could do these as attachments/tables)
             # --- generate video of segment
             step_rsm.join_all_recordings()
             # --- get relevant frames

@@ -111,17 +111,8 @@ class RecordingSeriesManager():
         # FIND STEP
         # --- see what step_description_text most closely matches out of step descriptions (just gonna reuse clip, its prob good enough)
         step_ras = list(filter(lambda ra: ra.type == "step", self.recording_annotations))
-        recording_annotation_idx = None
         # either check for query text similarities or exact match
-        if recording_annotation != None:
-            recording_annotation_idx = step_ras.index(recording_annotation)
-        elif query_text != None:
-            step_ras_strings = [ra.data.get('text') for ra in step_ras]
-            print(f"[RecordingSeriesManager.get_recordings_for_step] step_ras_strings: ", step_ras_strings)
-            _, step_text_encodings = clip_encode([], step_ras_strings)
-            _, query_text_encodings = clip_encode([], [query_text])
-            recording_annotation_similarities = clip_similarity(step_text_encodings, query_text_encodings[0]) # returns a list of 0 to 1 values mapping to list arg
-            recording_annotation_idx = np.argmax(recording_annotation_similarities)
+        recording_annotation_idx = step_ras.index(recording_annotation)
         print(f"[RecordingSeriesManager.get_recordings_for_step] annotation idx: ", recording_annotation_idx)
         starting_recording_id = step_ras[recording_annotation_idx].recording_id
         ending_recording_id = step_ras[recording_annotation_idx + 1].recording_id if len(step_ras) > (recording_annotation_idx + 1) else None
@@ -149,6 +140,22 @@ class RecordingSeriesManager():
             })
         # --- return
         return step_recordings
+
+    def get_similar_step_annotation(self, query_text: str) -> RecordingAnnotation:
+        print(f"[RecordingSeriesManager.get_similar_step_annotation] query_text: {query_text}")
+        # --- get steps
+        step_ras = list(filter(lambda ra: ra.type == "step", self.recording_annotations))
+        # --- get most similar
+        step_ras_strings = [ra.data.get('text') for ra in step_ras]
+        print(f"[RecordingSeriesManager.get_similar_step_annotation] step_ras_strings: ", step_ras_strings)
+        _, step_text_encodings = clip_encode([], step_ras_strings)
+        _, query_text_encodings = clip_encode([], [query_text])
+        recording_annotation_similarities = clip_similarity(step_text_encodings, query_text_encodings[0])
+        recording_annotation_idx = np.argmax(recording_annotation_similarities)
+        # --- return
+        most_similar_ra = step_ras[recording_annotation_idx]
+        print(f"[RecordingSeriesManager.get_similar_step_annotation] recording_annotation: ", most_similar_ra.id)
+        return most_similar_ra
 
     # VIDEO PROCESSING
     # --- series recording (allow passing in a slice)
@@ -220,8 +227,8 @@ class RecordingSeriesManager():
         image_encodings, text_encodings = clip_encode(frames_not_blurry_for_comparison, [query_text])
         image_similarities = clip_similarity(image_encodings, text_encodings[0])
         # --- return top 3
-        def find_highest_indexes(lst, n=3):
-            return sorted(range(len(lst)), key=lambda i: lst[i], reverse=True)[:n]
+        def find_highest_indexes(lst, num_idxs=3):
+            return sorted(range(len(lst)), key=lambda i: lst[i], reverse=True)[:num_idxs]
         indexes = find_highest_indexes(image_similarities)
         # --- filter frames by indexes
         frames = []
