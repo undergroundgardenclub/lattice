@@ -4,6 +4,7 @@ from env import env_queue_host, env_queue_port
 from actor.pf_actor_act import pf_actor_act
 from actor.actions.describe_device_manual.pf_actor_action_device_manual import pf_actor_action_describe_device_manual
 from actor.actions.question_answer.pf_actor_action_question_answer import pf_actor_action_question_answer
+from actor.actions.recording_annotation.pf_actor_action_recording_annotation import pf_actor_action_recording_annotation
 from actor.actions.recordings_get_clip.pf_actor_action_recordings_get_clip import pf_actor_action_recordings_get_clip
 from actor.actions.recordings_summarize.pf_actor_action_recordings_summarizer import pf_actor_action_recordings_summarizer
 from device.ingest.pf_device_ingest_recording import pf_device_ingest_recording
@@ -32,6 +33,7 @@ async def work():
     w_actor_act = Worker("actor_act", pfw(pf_actor_act), { **queue_worker_opts })
     w_actor_action_describe_device_manual = Worker("actor_action_describe_device_manual", pfw(pf_actor_action_describe_device_manual), { **queue_worker_opts, "lockDuration": 1000 * 60 * 2 })
     w_actor_action_question_answer = Worker("actor_action_question_answer", pfw(pf_actor_action_question_answer), { **queue_worker_opts, "lockDuration": 1000 * 60 * 2 })
+    w_actor_action_recording_annotation = Worker("actor_action_recording_annotation", pfw(pf_actor_action_recording_annotation), { **queue_worker_opts, "lockDuration": 1000 * 60 * 15 })
     w_actor_action_recordings_get_clip = Worker("actor_action_recordings_get_clip", pfw(pf_actor_action_recordings_get_clip), { **queue_worker_opts, "lockDuration": 1000 * 60 * 15 })
     w_actor_action_recordings_summarizer = Worker("actor_action_recordings_summarizer", pfw(pf_actor_action_recordings_summarizer), { **queue_worker_opts, "lockDuration": 1000 * 60 * 15 })
     # --- devices

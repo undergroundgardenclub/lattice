@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from env import env_email_to_test
 from recording.get_recording_file_duration import get_recording_file_duration
 from recording.Recording import Recording
-from llms.prompts import prompt_determine_actor_tool
+from llms.prompts import prompt_clean_up_text, prompt_determine_actor_tool
 from actor.actor_tools import ActorTools
 from queues.queues import queues
 from queues.queue_add_job import queue_add_job
@@ -56,6 +56,14 @@ async def _pf_actor_act(device_id: str, series_id: str, query_media_file_dict: d
         await queue_add_job(queues['actor_action_describe_device_manual'], {
             "device_id": device_id,
         })
+    # --- recording mark (ex: denoting step, mentioning remidner)
+    elif query_tool_name == at.tools["recording_annotation"]["name"]:
+        await queue_add_job(queues['actor_action_recording_annotation'], {
+            "device_id": device_id,
+            "series_id": series_id,
+            "recording_id": recording_id,
+            "type": query_tool_args.get("type"),
+        })
     # --- question answer
     elif query_tool_name == at.tools["question_answer"]["name"]:
         await queue_add_job(queues['actor_action_question_answer'], {
@@ -68,18 +76,20 @@ async def _pf_actor_act(device_id: str, series_id: str, query_media_file_dict: d
         await queue_add_job(queues['actor_action_recordings_summarizer'], {
             "device_id": device_id,
             "series_id": series_id, # not used btw
-            "interval_unit": query_tool_args["interval_unit"],
-            "interval_num": int(query_tool_args["interval_num"]),
-            "to_email": env_email_to_test()
+            "interval_unit": query_tool_args.get("interval_unit"),
+            "interval_num": query_tool_args.get("interval_num"),
+            "to_email": env_email_to_test(),
         })
     # --- video series composition
-    elif query_tool_name == at.tools["send_video_series_slice"]["name"]:
+    elif query_tool_name == at.tools["send_recording_clip"]["name"]:
+        step_description_text = prompt_clean_up_text(transcript["text"], "Remove starting words/phrases like 'send me a video clip' but preserve the rest of the sentences.")
         await queue_add_job(queues['actor_action_recordings_get_clip'], {
             "device_id": device_id,
-            "series_id": series_id, # not used btw
-            "interval_unit": query_tool_args["interval_unit"],
-            "interval_num": int(query_tool_args["interval_num"]),
-            "to_email": env_email_to_test()
+            "type": query_tool_args.get("type"), # series, or interval
+            "to_email": env_email_to_test(),
+            "interval_unit": query_tool_args.get("interval_unit"),
+            "interval_num": query_tool_args.get("interval_num"),
+            "step_description_text": step_description_text,
         })
     # --- other (this exists to ensure LLM doesn't push into prior categories)
     else:
