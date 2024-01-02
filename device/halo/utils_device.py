@@ -51,7 +51,7 @@ def led_pattern(pattern_type: str = None):
         num_blinks = 1
         delay_blinks = 0.1
     elif pattern_type == "error":
-        num_blinks = 15
+        num_blinks = 5
         delay_blinks = 0.1
 
     # --- execute pattern

@@ -15,7 +15,7 @@ def req_recording_series_send(media_file_dict: dict, series_id: str):
         logging.info('[req_recording_series_send] response: ', response_json)
         return
     except Exception as err:
-        logging.error("[req_recording_series_send] error: ", err)
+        logging.error("[req_recording_series_send] error: %s", err)
         return
 
 
@@ -28,7 +28,7 @@ def req_query(query_media_file_dict: dict, series_id: str = None):
         logging.info("[req_query] response: ", response_json)
         return response_json.get("data")
     except Exception as err:
-        logging.error("[req_query] error: ", err)
+        logging.error("[req_query] error: %s", err)
         return None
 
 
@@ -43,7 +43,7 @@ def req_get_device_messages():
             return response_json.get("data").get("messages", [])
         return []
     except Exception as err:
-        logging.error("[req_get_device_messages] error: ", err)
+        logging.error("[req_get_device_messages] error: %s", err)
         return []
 
 
@@ -54,5 +54,5 @@ def req_tracking_event(event: dict) -> None:
         response = requests.post(env_api_url() + "/v1/tracking/event", data=json.dumps({ "event": { "device_id": env_device_id(), **event } }))
         return
     except Exception as err:
-        logging.error("[req_get_device_messages] error: ", err)
+        logging.error("[req_get_device_messages] error: %s", err)
         return

@@ -2,7 +2,7 @@ import json
 import logging
 import time
 from utils_api import req_query, req_recording_series_send, req_tracking_event
-from utils_device import EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_SEND_SERIES_RECORDING, EVENT_TYPE_SEND_QUERY_RECORDING
+from utils_device import EVENT_TYPE_PLAY_AUDIO, EVENT_TYPE_SEND_SERIES_DONE, EVENT_TYPE_SEND_SERIES_RECORDING, EVENT_TYPE_SEND_QUERY_RECORDING
 from utils_files import delete_file, store_file_from_path, get_stored_file_url
 from utils_media import combine_h264_and_wav_into_mp4
 
@@ -23,7 +23,7 @@ def processor_sender(pe, pq):
             
             # SEND
             if job_type != None:
-                logging.info("[processor_sender] %s", job_type, job_data)
+                logging.info("[processor_sender] %s - %s", job_type, job_data)
                 # --- api pings
                 if job_type == EVENT_TYPE_SEND_SERIES_DONE:
                         req_tracking_event({ "type": "series_done", "data": { "series_id": job_data.get("series_id") } })
@@ -57,6 +57,9 @@ def processor_sender(pe, pq):
                     delete_file(file_path_wav)
                     delete_file(file_path_wav + ".json")
                     delete_file(file_path_mp4)
+
+                # --- signal we've sent the request
+                pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/working_on_it.mp3" }) })
 
 
         except Exception as proc_err:
