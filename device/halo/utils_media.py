@@ -10,10 +10,6 @@ from utils_files import read_file_json, tmp_file_rmv, tmp_file_set
 
 # FFMPEG
 # --- converters
-def convert_h264_to_mp4(input_file: str, output_file: str, frame_rate: int):
-    command = ["ffmpeg", "-r", str(frame_rate), "-i", input_file, "-c:v", "copy", "-c:a", "copy", output_file]
-    subprocess.run(command)
-
 def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_path):
     logging.info("[combine_h264_and_wav_into_mp4] video: %s + audio: %s = mp4 %s", video_file_path, audio_file_path, output_file_path)
     # --- calc offset since multiprocess
