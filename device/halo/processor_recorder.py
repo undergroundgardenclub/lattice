@@ -82,33 +82,43 @@ def processor_recorder(pe, pq): # process_events, process_queues
                     video_start_time_sec = time.time()
 
                     # RECORD: AUDIO
-                    audio = pyaudio.PyAudio()
-                    audio_frames = []
+                    # audio = pyaudio.PyAudio()
                     # --- open stream
-                    audio_stream = audio.open(format=audio_format, channels=audio_channels, rate=audio_sample_rate, input=True, frames_per_buffer=audio_chunk)
+                    # audio_stream = audio.open(format=audio_format, channels=audio_channels, rate=audio_sample_rate, input=True, frames_per_buffer=audio_chunk)
                     audio_start_time_sec = time.time()
+                    audio_frames = []
 
                     # ... if query, wait until button is lifted (while we wait, push audio)
                     if job_type == EVENT_TYPE_RECORD_QUERY:
                         while pe["event_is_recording_query"].is_set() == True:
-                            audio_chunk_data = audio_stream.read(audio_chunk)
-                            audio_frames.append(audio_chunk_data)
+                            # audio_chunk_data = audio_stream.read(audio_chunk)
+                            logging.info("[?????????] pushing 1")
+                            audio_chunk_data = pq["queue_recorder_audio"].get()
+                            if audio_chunk_data:
+                                logging.info("[?????????] pushing 2")
+                                audio_frames.append(audio_chunk_data)
                     # ... if segment, ensure recording flag is true, we're under 2 min, but interrupt if the query flag is flipped (while we wait, push audio)
                     elif job_type == EVENT_TYPE_RECORD_SERIES:
                         while pe["event_is_recording_series"].is_set() == True and pe["event_is_recording_query"].is_set() == False and calculate_offset_seconds(segment_start_sec, time.time()) < recording_segment_duration_sec:
-                            audio_chunk_data = audio_stream.read(audio_chunk)
-                            audio_frames.append(audio_chunk_data)
+                            # audio_chunk_data = audio_stream.read(audio_chunk)
+                            logging.info("[?????????] pushing 3")
+                            audio_chunk_data = pq["queue_recorder_audio"].get()
+                            if audio_chunk_data:
+                                logging.info("[?????????] pushing 4")
+                                audio_frames.append(audio_chunk_data)
 
                     # RECORD: STOPPING
                     # --- resolve video recording
+                    logging.info(f"[processor_recorder] stopping picamera recording")
                     picam2.stop_recording()
                     # --- resolve video recording: save file/meta
                     write_file_json(file_path_h264 + '.json', { 'start_time_sec': video_start_time_sec })
                     # --- resolve audio recording
-                    audio_stream.stop_stream()
-                    audio_stream.close()
-                    audio.terminate()
+                    # audio_stream.stop_stream()
+                    # audio_stream.close()
+                    # audio.terminate()
                     # --- resolve audio recording: save file/meta
+                    logging.info(f"[processor_recorder] writing wav file")
                     with wave.open(file_path_wav, 'wb') as wf:
                         wf.setnchannels(audio_channels)
                         wf.setsampwidth(audio.get_sample_size(audio_format))
@@ -152,4 +162,4 @@ def processor_recorder(pe, pq): # process_events, process_queues
         pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/an_error_has_occurred.mp3" }) })
         pq["queue_led"].put({ "type": "error" })
         pq["queue_led"].put({ "type": "off" })
-        sys.exit(1) # attempting to trigger garbage clean up on this process and any references in case we hit a CmaFree allocation issue. main will restart proc
+        # sys.exit(1) # attempting to trigger garbage clean up on this process and any references in case we hit a CmaFree allocation issue. main will restart proc

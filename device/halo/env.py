@@ -26,13 +26,19 @@ def env_device_id():
     
 def env_directory_data():
     this_path = os.path.dirname(os.path.abspath(__file__))
-    return this_path + "/data/"
+    return this_path + "/data"
 
 def env_directory_logs():
     this_path = os.path.dirname(os.path.abspath(__file__))
-    return this_path + "/logs/"
+    return this_path + "/logs"
 
 # RECORDING
+def env_recording_audio_channels():
+    return 1
+
+def env_recording_audio_chunk_size():
+    return 1024
+
 def env_recording_frame_rate():
     # 12 fps had blur from movement, so try to inch upwards. default is 25 but trying to reduce long capture file size. because h264 doesnt hold fps we need to copy into a mp4 med container w/ fps info (https://github.com/waveform80/picamera/issues/253#issuecomment-163593379)
     # 25 (default) threw timings off harddddd

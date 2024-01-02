@@ -16,7 +16,7 @@ from utils_media import generate_media_id, play_audio
 
 # SETUP
 # --- logging file
-logging.basicConfig(filename=env_directory_logs() + "halo.log", level=logging.DEBUG)
+logging.basicConfig(filename=env_directory_logs() + "/halo.log", level=logging.DEBUG)
 logging.info('[main] SETUP')
 # --- peripherals (maybe should be global references for control overrides by subprocesses?)
 button_input = digitalio.DigitalInOut(PIN_RECORD_BUTTON)
@@ -40,6 +40,7 @@ series_id = None # set/clear when triple tapping. going to set to a random uuid
 process_queues = {
     "queue_led": multiprocessing.Queue(),
     "queue_messages": multiprocessing.Queue(),
+    "queue_recorder_audio": multiprocessing.Queue(),
     "queue_recorder_query": multiprocessing.Queue(),
     "queue_recorder_series": multiprocessing.Queue(),
     "queue_sender": multiprocessing.Queue(),
@@ -49,6 +50,16 @@ process_events = {
     "event_is_recording_series": multiprocessing.Event(), # events start is_set() == False
     "event_is_recording_query": multiprocessing.Event(), # events start is_set() == False
 }
+# --- processor: led patterns (this can be blocking, so offloading this to unblock main loop)
+def processor_led_fork(pe, pq):
+    import processor_led
+    processor_led.processor_led(pe, pq)
+ps_processor_led = threading.Thread(target=processor_led_fork, args=(process_events, process_queues))
+# --- processor: listener (going to be running whisper)
+def processor_listener_fork(pe, pq):
+    import processor_listener
+    processor_listener.processor_listener(pe, pq)
+ps_processor_listener = multiprocessing.Process(target=processor_listener_fork, args=(process_events, process_queues))
 # --- processor: recording
 def processor_recorder_fork(pe, pq):
     import processor_recorder
@@ -59,11 +70,6 @@ def processor_sender_fork(pe, pq):
     import processor_sender
     processor_sender.processor_sender(pe, pq)
 ps_processor_sender = threading.Thread(target=processor_sender_fork, args=(process_events, process_queues))
-# --- processor: led patterns (this can be blocking, so offloading this to unblock main loop)
-def processor_led_fork(pe, pq):
-    import processor_led
-    processor_led.processor_led(pe, pq)
-ps_processor_led = threading.Thread(target=processor_led_fork, args=(process_events, process_queues))
 
 
 # INTERACTION FNS
@@ -71,6 +77,7 @@ ps_processor_led = threading.Thread(target=processor_led_fork, args=(process_eve
 def interaction_press_single(pe, pq):
     logging.info('[interaction_press_single] triggered')
     pq["queue_led"].put({ "type": "blink" }) # just for demoing/testing out. can't seem to trigger from other processes
+    pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/yes.mp3" }) })
 
 # --- double
 def interaction_press_double(pe, pq):
@@ -103,7 +110,8 @@ def interaction_press_long(pe, pq, is_button_pressed):
         pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/yes.mp3" }) })
     elif is_button_pressed == False and pe["event_is_recording_query"].is_set() == True:
         pe["event_is_recording_query"].clear()
-        pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/working_on_it.mp3" }) })
+        # Moved audio cue to function
+        # pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/working_on_it.mp3" }) })
 
 
 # PROCESSOR/LOOP
@@ -189,6 +197,14 @@ while True:
 
         # PROCESS HEALTH CHECKS
         # --- ensure processors are still running (check if we can just start() or we need to redefine)
+        if ps_processor_led.is_alive() == False:
+            logging.info("[loop] 'ps_processor_led' is_alive = %s, starting again", ps_processor_led.is_alive())
+            ps_processor_led = threading.Thread(target=processor_led_fork, args=(process_events, process_queues))
+            ps_processor_led.start()
+        if ps_processor_listener.is_alive() == False:
+            logging.info("[loop] 'ps_processor_listener' is_alive = %s, starting again", ps_processor_listener.is_alive())
+            ps_processor_listener = multiprocessing.Process(target=processor_listener_fork, args=(process_events, process_queues))
+            ps_processor_listener.start()
         if ps_processor_recorder.is_alive() == False:
             logging.info("[loop] 'ps_processor_recorder' is_alive = %s, starting again", ps_processor_recorder.is_alive())
             ps_processor_recorder = multiprocessing.Process(target=processor_recorder_fork, args=(process_events, process_queues))
@@ -199,10 +215,6 @@ while True:
             logging.info("[loop] 'ps_processor_sender' is_alive = %s, starting again", ps_processor_sender.is_alive())
             ps_processor_sender = threading.Thread(target=processor_sender_fork, args=(process_events, process_queues))
             ps_processor_sender.start()
-        if ps_processor_led.is_alive() == False:
-            logging.info("[loop] 'ps_processor_led' is_alive = %s, starting again", ps_processor_led.is_alive())
-            ps_processor_led = threading.Thread(target=processor_led_fork, args=(process_events, process_queues))
-            ps_processor_led.start()
 
 
     except Exception as main_err:

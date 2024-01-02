@@ -10,10 +10,6 @@ from utils_files import read_file_json, tmp_file_rmv, tmp_file_set
 
 # FFMPEG
 # --- converters
-def convert_h264_to_mp4(input_file: str, output_file: str, frame_rate: int):
-    command = ["ffmpeg", "-r", str(frame_rate), "-i", input_file, "-c:v", "copy", "-c:a", "copy", output_file]
-    subprocess.run(command)
-
 def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_path):
     logging.info("[combine_h264_and_wav_into_mp4] video: %s + audio: %s = mp4 %s", video_file_path, audio_file_path, output_file_path)
     # --- calc offset since multiprocess
@@ -37,7 +33,7 @@ def combine_h264_and_wav_into_mp4(video_file_path, audio_file_path, output_file_
         '-map', '1:a:0', # for offset, apply change to audio
         output_file_path
     ]
-    logging.info("[combine_h264_and_wav_into_mp4] command: ", command)
+    logging.info("[combine_h264_and_wav_into_mp4] command: %s", command)
     subprocess.run(command, check=True)
 
 # MEDIA
@@ -64,19 +60,19 @@ def get_media_local_file_path(media_id, media_format, segment_id = None):
 AUDIO_CHANNEL_MAIN = 0
 def play_audio(audio_bytes, is_blocking: bool, channel = AUDIO_CHANNEL_MAIN):
     logging.info("[play_audio] playing, blocking: %s", is_blocking)
-    pygame.mixer.init()
-    # --- create sound
-    sound = pygame.mixer.Sound(audio_bytes)
-    # --- create channel + play
-    channel = pygame.mixer.Channel(channel) # must provide id. in the future may need to manage this if doing audio playback + notifications sounds
-    channel.set_volume(0.75)
-    channel.play(sound, loops=0)
-    # --- wait till done playing sound before returning (needed seomtimes bc a process exit stops sound)
-    if is_blocking:
-        logging.info("[play_audio] playing, start: %s", time.time())
-        while channel.get_busy():
-            continue
-        logging.info("[play_audio] playing, done: %s", time.time())
+    # pygame.mixer.init()
+    # # --- create sound
+    # sound = pygame.mixer.Sound(audio_bytes)
+    # # --- create channel + play
+    # channel = pygame.mixer.Channel(channel) # must provide id. in the future may need to manage this if doing audio playback + notifications sounds
+    # channel.set_volume(0.75)
+    # channel.play(sound, loops=0)
+    # # --- wait till done playing sound before returning (needed seomtimes bc a process exit stops sound)
+    # if is_blocking:
+    #     logging.info("[play_audio] playing, start: %s", time.time())
+    #     while channel.get_busy():
+    #         continue
+    #     logging.info("[play_audio] playing, done: %s", time.time())
     logging.info("[play_audio] done")
 
 # --- play (v2)
