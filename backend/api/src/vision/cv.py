@@ -66,13 +66,12 @@ def video_frame_generator(file_path, start_second: int = None, stop_second: int 
     # --- release the video capture object
     video.release()
 
-def is_image_blurry(image_data):
+def is_image_blurry(image_data, threshold: int = 80.0) -> bool:
+    # Define a threshold value for the variance, going low bc i'm looking for clearly bad; this can be tuned (example pics of thresholds: https://pyimagesearch.com/2015/09/07/blur-detection-with-opencv/)
     # Convert the image to grayscale
     gray = cv2.cvtColor(image_data, cv2.COLOR_BGR2GRAY)
     # Compute the Laplacian of the image and then return the focus measure, which is simply the variance of the Laplacian
     variance_of_laplacian = cv2.Laplacian(gray, cv2.CV_64F).var()
-    # Define a threshold value for the variance; this can be tuned (example pics of thresholds: https://pyimagesearch.com/2015/09/07/blur-detection-with-opencv/)
-    threshold = 150.0
     # If the variance is less than the threshold, the image is considered blurry
     if variance_of_laplacian < threshold:
         return True #, variance_of_laplacian
