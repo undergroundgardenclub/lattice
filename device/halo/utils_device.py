@@ -5,7 +5,7 @@ import time
 from typing import Optional
 
 
-# PINS
+# PINS (https://www.electrorules.com/raspberry-pi-4-gpio-pnout/)
 PIN_RECORD_BUTTON = board.D14
 PIN_LED = board.D23
 

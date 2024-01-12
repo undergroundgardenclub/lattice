@@ -14,11 +14,11 @@ def _env_getter(key):
 
 # AWS
 def env_aws_access_key_id():
-    return _env_getter('AWS_ACCESS_KEY_ID')
+    return _env_getter("AWS_ACCESS_KEY_ID")
 def env_aws_secret_access_key():
-    return _env_getter('AWS_SECRET_ACCESS_KEY')
+    return _env_getter("AWS_SECRET_ACCESS_KEY")
 def env_aws_s3_files_bucket():
-    return _env_getter('AWS_BUCKET_FILES')
+    return _env_getter("AWS_BUCKET_FILES")
 
 # DEVICE
 def env_device_id():
@@ -43,4 +43,4 @@ def env_recording_sample_rate():
 
 # SERVICES
 def env_api_url():
-    return "http://lattice.ngrok.app"
+    return _env_getter("SERVICE_API_URL")
