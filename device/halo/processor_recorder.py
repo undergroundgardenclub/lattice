@@ -123,6 +123,8 @@ def processor_recorder(pe, pq): # process_events, process_queues
                     # --- if this was a serial recording, and event says still recording, add next segment to queue (distinguished by segment_start_sec)
                     if job_type == EVENT_TYPE_RECORD_SERIES and pe["event_is_recording_series"].is_set() == True:
                         pq["queue_recorder_series"].put({ "type": EVENT_TYPE_RECORD_SERIES, "data": { **job_data, "segment_start_sec": time.time() } })
+                        # --- beep so person knows recording is continuing
+                        pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/beep.mp3" }) })
                     # --- send to processor_recorder_send
                     if job_type == EVENT_TYPE_RECORD_SERIES:
                         pq["queue_sender"].put({ "type": EVENT_TYPE_SEND_SERIES_RECORDING, "data": { "file_path_h264": file_path_h264, "file_path_wav": file_path_wav, "file_path_mp4": file_path_mp4, "file_key_mp4": file_key_mp4, "series_id": job_data.get("series_id") } })

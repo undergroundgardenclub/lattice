@@ -71,11 +71,13 @@ ps_processor_led = threading.Thread(target=processor_led_fork, args=(process_eve
 def interaction_press_single(pe, pq):
     logging.info('[interaction_press_single] triggered')
     pq["queue_led"].put({ "type": "blink" }) # just for demoing/testing out. can't seem to trigger from other processes
+    pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/beep.mp3" }) })
 
 # --- double
 def interaction_press_double(pe, pq):
     logging.info('[interaction_press_double] triggered')
     pq["queue_led"].put({ "type": "error" })
+    pq["queue_messages"].put({ "type": EVENT_TYPE_PLAY_AUDIO, "data": json.dumps({ "file_path": "./media/chime.mp3" }) })
 
 # --- triple
 def interaction_press_triple(pe, pq):
