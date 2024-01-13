@@ -11,6 +11,12 @@ async def _recordings_html_summarizer_from_annotations(recordings_by_step) -> st
     # ... for each recording step
     for rbs in recordings_by_step:
         step_rsm = RecordingSeriesManager()
+
+        # Uncomment if I need to inspect some section's html output
+        # if rbs.get("step").id != 33:
+        #     print("??????", rbs.get("step").id)
+        #     continue
+
         try:
             await step_rsm.load_recordings(rbs.get("recordings"))
             # --- generate header (TODO: annotation text should be cleaned up already???)

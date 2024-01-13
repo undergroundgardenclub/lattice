@@ -1,3 +1,4 @@
+import numpy as np
 from typing import List
 import torch
 from transformers import CLIPProcessor, CLIPModel
@@ -31,7 +32,7 @@ def clip_encode(images: List = [], text: List = []):
 
 
 # CALCS
-def clip_similarity(features_list, feature_compared):
+def clip_similarity(features_list, feature_compared) -> np.ndarray:
     print(f"[clip_similarity] {len(features_list)} features")
     # Ensure feature_compared is two-dimensional for matrix multiplication
     feature_compared = feature_compared.unsqueeze(0) if feature_compared.dim() == 1 else feature_compared
@@ -41,4 +42,5 @@ def clip_similarity(features_list, feature_compared):
     # Calculate cosine similarity
     similarity = torch.matmul(features_list, feature_compared.T).squeeze()
     # return results list
-    return similarity.cpu().numpy()
+    similarity_arr = similarity.cpu().numpy()
+    return similarity_arr if similarity_arr.ndim > 0 else np.array([similarity_arr])
