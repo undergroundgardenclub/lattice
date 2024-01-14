@@ -1,6 +1,6 @@
 from typing import List
 from emails.email_html_templates import html_template_step_section, html_template_steps_body
-from llms.prompts import prompt_simple_attributes_list, prompt_simple_summary, prompt_simple_title
+from llms.prompts import prompt_image_prompts, prompt_simple_attributes_list, prompt_simple_summary, prompt_simple_title
 from recording.Recording import Recording
 from recording.RecordingSeriesManager import RecordingSeriesManager
 
@@ -13,8 +13,8 @@ async def _recordings_html_summarizer_from_annotations(recordings_by_step) -> st
         step_rsm = RecordingSeriesManager()
 
         # Uncomment if I need to inspect some section's html output
-        # if rbs.get("step").id != 33:
-        #     print("??????", rbs.get("step").id)
+        # if rbs.get("step").id != 45:
+        #     print("SKIPPING STEP: ", rbs.get("step").id)
         #     continue
 
         try:
@@ -24,12 +24,17 @@ async def _recordings_html_summarizer_from_annotations(recordings_by_step) -> st
             # --- generate summary/actions/bullets
             summary_text = prompt_simple_summary(step_rsm.transcripts_text)
             attributes_list = prompt_simple_attributes_list(step_rsm.transcripts_text)
-            # TODO: grab 'observations' annotations like looking at gels, plates, and add to email (could do these as attachments/tables)
-            # --- generate video of segment
+            image_prompts_list = prompt_image_prompts(step_rsm.transcripts_text, "Only provide 3 prompts using 10 words or less. DO NOT mention people or reference 'people' doing things.")
+            # --- generate video of segment + frames
             step_rsm.join_all_recordings()
+            step_recording_frames = step_rsm.get_frames(interval_seconds=5)
             # --- get relevant frames
-            image_frames = step_rsm.get_frames_query(query_text=header_text)
-            image_frames_as_jpgs = step_rsm.encode_frames_as(image_frames, "jpg", 15)
+            image_frames = []
+            for image_prompt in image_prompts_list:
+                prompt_image_frames = step_rsm.get_frames_query(query_text=image_prompt, blur_threshold=15, frames=step_recording_frames)
+                if prompt_image_frames[0] is not None:
+                    image_frames += prompt_image_frames[:1]
+            image_frames_as_jpgs = step_rsm.encode_frames_as(image_frames, "jpg", 12)
             # --- store the video file for reference in email
             step_rsm.store_series_recording()
             # --- form html

@@ -162,7 +162,6 @@ def prompt_simple_summary(input_text: str, extra_instruction_text: str = None):
     data = json.loads(response.choices[0].message.content)
     text = data['summary_text']
     print(f"[prompt_simple_summary] text: {text}")
-    # return
     return text
 
 def prompt_simple_title(input_text: str, extra_instruction_text: str = None):
@@ -180,7 +179,6 @@ def prompt_simple_title(input_text: str, extra_instruction_text: str = None):
     data = json.loads(response.choices[0].message.content)
     text = data['title_text']
     print(f"[prompt_simple_summary] text: {text}")
-    # return
     return text
 
 # --- attributes extraction
@@ -202,6 +200,23 @@ def prompt_simple_attributes_list(input_text: str, extra_instruction_text: str =
     # return
     return attributes_list
 
+# --- image selection
+def prompt_image_prompts(input_text: str, extra_instruction_text: str = None) -> List[str]:
+    print(f"[prompt_image_prompts] querying")
+    response = openai_client.chat.completions.create(
+        model="gpt-4-1106-preview",
+        response_format={ "type": "json_object" },
+        messages=[
+            { "role": "system", "content": f"You are a helpful assistant writing prompts for selecting images at various points in a text that describes a series of events.{extra_instruction_text or ''}. Respond in the JSON format, {{ 'task_image_prompts': str[] }}." },
+            { "role": "user", "content": input_text }
+        ],
+        temperature=0.2,
+    )
+    # parse response
+    data = json.loads(response.choices[0].message.content)
+    prompts = data['task_image_prompts']
+    print(f"[prompt_image_prompts] prompts: {prompts}")
+    return prompts
 
 # DATA STRUCTURING UTILS
 # --- given a data structure and instructions, form cols/rows

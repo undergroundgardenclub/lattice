@@ -212,10 +212,10 @@ class RecordingSeriesManager():
         return frames
 
     # --- get frames subset for query (filters blurry as well)
-    def get_frames_query(self, query_text: str, blur_threshold: int = 15.0, interval_seconds: int = 10) -> List:
+    def get_frames_query(self, query_text: str, blur_threshold: int = 15.0, interval_seconds: int = None, frames: List[np.ndarray] = None) -> List:
         print(f"[RecordingSeriesManager.get_frames_query] start: {query_text}, interval_seconds: {interval_seconds}")
-        # --- get frames
-        frames_for_comparison = self.get_frames(interval_seconds=interval_seconds) # doing a bit of an interval to get diverse picks
+        # --- get frames (unless provided, which makes this query wayyy faster)
+        frames_for_comparison = frames or self.get_frames(interval_seconds=interval_seconds) # doing a bit of an interval to get diverse picks
         if len(frames_for_comparison) == 0:
             return []
         # --- filter blurry frames
@@ -227,8 +227,10 @@ class RecordingSeriesManager():
         image_encodings, text_encodings = clip_encode(frames_not_blurry_for_comparison, [query_text])
         # --- return top 3 (TODO: make sure images have some differences so we don't get repeats. negative query or embedding diff min)
         image_similarities = clip_similarity(image_encodings, text_encodings[0])
+        # print("image_similarities", image_similarities)
         def find_highest_indexes(lst = [], num_idxs: int = 3):
             sorted_lst = sorted(range(len(lst)), key=lambda i: lst[i], reverse=True)
+            print(f"[RecordingSeriesManager.get_frames_query] find_highest_indexes, high: {sorted_lst[:1]}, unused: {sorted_lst[1:-1]} low: {sorted_lst[-1:]}")
             return sorted_lst[:num_idxs] if len(sorted_lst) > num_idxs else sorted_lst
         indexes = find_highest_indexes(image_similarities)
         print(f"[RecordingSeriesManager.get_frames_query] similary indexes: {indexes}")

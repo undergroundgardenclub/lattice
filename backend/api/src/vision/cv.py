@@ -33,10 +33,8 @@ def video_frame_at_second(file_path, second) -> np.ndarray:
     try:
         if ret:
             frame = cv2.cvtColor(frame, cv2.IMREAD_COLOR)
-            # return frame
-            # converting to a JPEG byte arr
-            frame_encoded_as_jpg = encode_frame_to_jpg(frame)
-            return frame_encoded_as_jpg # numpy.ndarray
+            frame_encoded_as_jpg = encode_frame_to_jpg(frame) # converting to a JPEG byte arr
+            return frame_encoded_as_jpg
         else:
             return None
     except Exception as err:
@@ -52,7 +50,8 @@ def video_frame_generator(file_path, start_second: int = None, stop_second: int 
     total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
     start_frame = int(start_second * fps) if start_second else 0
     stop_frame = int(stop_second * fps) if stop_second else total_frames
-    frame_step = 1 if interval_seconds == None else int(interval_seconds * fps) # if no interval by seconds, output each frame
+    frame_step = fps if interval_seconds == None else int(interval_seconds * fps) # if no interval by seconds, output each frame
+    print(f"[video_frame_generator] fps: {fps}, total_frames: {total_frames}, start_frame: {start_frame}, stop_frame: {stop_frame}, frame_step: {frame_step}")
     # --- set starting frame
     video.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
     current_frame = start_frame
@@ -61,8 +60,9 @@ def video_frame_generator(file_path, start_second: int = None, stop_second: int 
         ret, frame = video.read()
         if not ret:
             break  # break the loop if no more frames are available
-        yield frame
-        current_frame += frame_step
+        if current_frame % frame_step == 0:
+            yield frame # frame becomes accessible to loop
+        current_frame += 1
     # --- release the video capture object
     video.release()
 
