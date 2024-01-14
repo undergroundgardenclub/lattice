@@ -8,22 +8,22 @@
 
 This central goal of this project is to create multiple devices for video, audio, and sensory streaming, enabling an AI system to help coordinate an individual or collective towards a goal in realtime.
 
-This system began development within our community of [self-taught synthetic biologists](https://undergroundgarden.club) engineering plants to secrete insulin and exploring climate biotech. By streaming thoughts, observations, and hardware sensors, we are seeding an AI system that can train new members and coordinate existing members rotating **through** wet lab work in between day/night jobs. AI is our bridge. Bi-directional conversation is the medium.
+This system began development within our community of [self-taught synthetic biologists](https://undergroundgarden.club) engineering plants to secrete insulin and exploring climate biotech ideas. By streaming thoughts, observations, and hardware sensors, we are seeding an AI system to train new members and coordinate existing members rotating on wet lab work in between their day/night jobs. AI is our bridge. Bi-directional conversation is the medium.
 
 ![Diagram of passive/active AI observations](docs/collectivebridges.png)
 
 ### EXPLORATORY DEVELOPMENT
 
-| ⬛️ | STAGE | DESCRIPTION |
-| --- | --- | --- |
-| 🟦 | ALPHA 1 | Wearable sensory ingestion (i.e., Halo) and passive multi-modal knowledge distillation systems |
-| ⬜️ | ALPHA 2 | Passive and active A.I. guidance systems |
-| ⬜️ | ALPHA 3 | Static equipment sensory ingestion and control (i.e., lab equipment) |
+| 🟩 | STAGE | DESCRIPTION | EX |
+| --- | --- | --- | --- |
+| 🟦 | ALPHA1 | Wearable device sensor data ingestion (i.e., Halo) and passive multi-modal knowledge distillation. Callable AI guidance systems | |
+| ⬜️ | ALPHA2 | Passive observer + plugin AI guidance system | |
+| ⬜️ | ALPHA3 | Multistream/equipment sensor data ingestion (i.e., lab equipment, orb) | |
 
 ### HARDWARE / WEARABLES TEMPLATES
 
 - [**HALO**](/device/halo): Headgear for video/audio/??? observation streaming and bi-directional AI interactions
-- ORB: [TODO] Static device for video/audio/??? input of a broad area and/or group
+- **ORB**: [TODO] Static device for video/audio/??? input of a broad area and/or group
 
 ---
 
@@ -33,24 +33,24 @@ This system began development within our community of [self-taught synthetic bio
 
 ATM, everything is setup to run locally. There are two primary pieces:
 
-> **Hardware**: Build/setup instructions are in the `/devices` directory. We're using a Raspberry Pis for good video/audio processing. Once interaction patterns are sturdy, we'll create our regalpunk aesthetic head piece and custom hardware.
+> **Hardware**: Build and setup instructions are in the `/devices` directory. We're using Raspberry Pis to simplify using this tool and ensuring good video/audio processing. Once interaction patterns are sturdy, we'll create our regalpunk aesthetic head piece and hardware configuration.
 
-> **AI Agents**: Accepts mp4 queries from devices, parses them for an action to take, and passes it to a respective tool/process. Queries a human can make are in `actor_tools.py`. Passive AI agent activity will be worked on next.
+> **AI Agents**: Backend parses multimedia queries from devices, determines actions to take (starting queries in `actor_tools.py`), and passes it to a respective tool/process. Passive AI agent activity will be worked on next.
 
-All interactivty with AI agents happens through devices. Viewing the data directly and/or in a web UI is an anti-pattern and a sign that our edge hardware design patterns are failing.
+We want to push exploration of interactivity on devices and the edge. Viewing the data directly and/or in a web UI is an anti-pattern and a sign that our edge hardware patterns are failing. At most, we may create it to provide permalinks to artifacts created by AI agents.
 
 ##### RUNNING LOCALLY
 
-- Create your `.env` file, which requires a few services which you will see env vars for in the backend's `env.py`
-- Build your [HALO](/device/halo/) hardware device (instructions in [sub-directory](/device/halo/))
-- Start a `ngrok` tunnel pointing at the local API
+- Create an `.env` file in the root directory for docker compose. This requires a few services which you will see in the backend `env.py`
+- Build/setup your [HALO](/device/halo/) hardware device (instructions in [sub-directory](/device/halo/))
+- Start a `ngrok` tunnel pointing at the local API for your device to send data through (to be improved/changed)
 - Ensure your hardware device's API url env param is pointing at that ngrok tunnel endpoint (may require forcing to `http` at the moment)
 - Triple click to begin your omnipresecent observer!
-- Build collective knowledge, informing future actions you and your friends will take
+- Build collective knowledge, informing future actions you and your collective will take.
 
 ---
 
 ### CONTRIBUTING
 
-If you want to explore and contribute, open up some discssions, issues, and PRs about your wild ideas. Given this is a hardware+software pursuit, we will spend a lot of time in the Github discussions to help folks get started and explore (at least until there is a hosted version of LATTICE that is coordinating improvements through our shared experiences)
+Open up some discssions, issues, and PRs about your wild ideas. We want to use Github discussions to ensure knowledge can be found by new folks setting up their systems. In the not so distant future, we can build a lattice system for contributors to work together through.
 
