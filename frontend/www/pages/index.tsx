@@ -40,9 +40,13 @@ const IndexPage = () => {
                 </a> */}
               </p>
               <p>
-                Want one? Let's talk: <a href="mailto:x@markthemark.com">mail</a> /{" "}
+                Want one?{" "}
+                <a href="https://github.com/undergroundgardenclub/lattice" target="_blank" rel="noreferrer">
+                  github
+                </a>{" "}
+                /
                 <a href="https://www.linkedin.com/in/markdghansen/" target="_blank" rel="noreferrer">
-                  linkedin
+                  connect
                 </a>
               </p>
             </section>
