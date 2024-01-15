@@ -6,7 +6,7 @@
 
 ### WHAT WE ARE BUILDING
 
-This central goal of this project is to create multiple devices for video, audio, and sensory streaming, enabling an AI system to help coordinate an individual or collective towards a goal in realtime.
+The central goal of this project is to create multiple devices for video, audio, and sensory streaming, enabling an AI system to help coordinate an individual or collective towards a goal in realtime. This initial version requires each person to wear a [HALO](device/halo) for continuous streaming and feedback from the system.
 
 This system began development within our community of [self-taught synthetic biologists](https://undergroundgarden.club) engineering plants to secrete insulin and exploring climate biotech ideas. By streaming thoughts, observations, and hardware sensors, we are seeding an AI system to train new members and coordinate existing members rotating on wet lab work in between their day/night jobs. AI is our bridge. Bi-directional conversation is the medium.
 
@@ -16,9 +16,11 @@ This system began development within our community of [self-taught synthetic bio
 
 | 🟩 | STAGE | DESCRIPTION | EX |
 | --- | --- | --- | --- |
-| 🟦 | ALPHA1 | Wearable device sensor data ingestion (i.e., Halo) and passive multi-modal knowledge distillation. Callable AI guidance systems | |
-| ⬜️ | ALPHA2 | Passive observer + plugin AI guidance system | |
-| ⬜️ | ALPHA3 | Multistream/equipment sensor data ingestion (i.e., lab equipment, orb) | |
+| 🟩 | ALPHA1 | Wearable device sensor data ingestion (i.e., HALO) and passive multi-modal knowledge distillation. Callable AI tools | |
+| 🟦 | ALPHA2 | Passive Observer AI agent + Multi-Stream | |
+| ⬜️ | ALPHA3 | Plugins system for AI actions to external services | |
+| ⬜️ | ALPHA4 | Sensor data ingestion (i.e., lab equipment, orb) | |
+| ⬜️ | ALPHA5 | Truffle Brain Integration. Control the Weights |
 
 ### HARDWARE / WEARABLES TEMPLATES
 
@@ -45,6 +47,8 @@ We want to push exploration of interactivity on devices and the edge. Viewing th
 - Build/setup your [HALO](/device/halo/) hardware device (instructions in [sub-directory](/device/halo/))
 - Start a `ngrok` tunnel pointing at the local API for your device to send data through (to be improved/changed)
 - Ensure your hardware device's API url env param is pointing at that ngrok tunnel endpoint (may require forcing to `http` at the moment)
+- `docker-compose up` the API/Worker/Queue/PGVector DB
+- TODO: run the migration script to update tables/cols
 - Triple click to begin your omnipresecent observer!
 - Build collective knowledge, informing future actions you and your collective will take.
 
