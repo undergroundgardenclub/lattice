@@ -1,4 +1,4 @@
-# LATTICE: Collective Observation + Action Platform
+# LATTICE: Collective Observation to AI-Assisted Action
 
 ![Group wearing headgear sharing perception](docs/group.webp)
 
@@ -20,7 +20,7 @@ This system began development within our community of [self-taught synthetic bio
 | 🟦 | ALPHA2 | Passive Observer AI agent + Multi-Stream | |
 | ⬜️ | ALPHA3 | Plugins system for AI actions to external services | |
 | ⬜️ | ALPHA4 | Sensor data ingestion (i.e., lab equipment, orb) | |
-| ⬜️ | ALPHA5 | Truffle Brain Integration. Control the Weights |
+| ⬜️ | ALPHA5 | Truffle Brain integration. Control the Weights |
 
 ### HARDWARE / WEARABLES TEMPLATES
 
