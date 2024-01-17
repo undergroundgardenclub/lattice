@@ -18,12 +18,12 @@ class ActorTools:
             },
             "recording_annotation": {
                 "name": "recording_annotation",
-                "description": "During a recording, make note of important information such as the start of a new step or a reminder for a task later.",
+                "description": "During a recording, make note of important information such as the start of a new step or a called out observation of some entity.",
                 "schema": {
                     "type": "object",
                     "properties": {
                         # doing just to assist tool deciding func. this is going to be processed by follow up processor so it can utilize image/video, not just transcription text
-                        "type": { "type": "string", "enum": ["step", "reminder", "observation.gel_electrophoresis", "observation.plate_colonies"] },
+                        "type": { "type": "string", "enum": ["step", "observation"] }, # TODO: make observation configurable by user?
                         # not doing text, because we'll just pass through transcript text, not some regurgitated LLM output
                     },
                 }

@@ -2,11 +2,11 @@ from datetime import datetime
 import json
 from typing import Optional
 import sqlalchemy as sa
+from actor.actor_tools import ActorTools
 from env import env_email_to_test
 from recording.get_recording_file_duration import get_recording_file_duration
 from recording.Recording import Recording
 from llms.prompts import prompt_clean_up_text, prompt_determine_actor_tool
-from actor.actor_tools import ActorTools
 from queues.queues import queues
 from queues.queue_add_job import queue_add_job
 from orm import sa_sessionmaker
@@ -49,7 +49,7 @@ async def _pf_actor_act(device_id: str, series_id: str, query_media_file_dict: d
     query_tool_name, query_tool_args = prompt_determine_actor_tool(_query_text)
     print(f"[_pf_actor_act] tool: {query_tool_name}", query_tool_args)
 
-    # EXECUTE
+    # ACT (a plugin could trigger here. hook: 'query')
     at = ActorTools()
     # --- describe manaul of what can be asked
     if query_tool_name == at.tools["help_manual_about_tool"]["name"]:
@@ -92,7 +92,7 @@ async def _pf_actor_act(device_id: str, series_id: str, query_media_file_dict: d
         })
     # --- other (this exists to ensure LLM doesn't push into prior categories)
     else:
-        print("[_pf_actor_act] tool '{query_tool}' unexpected")
+        print(f"[_pf_actor_act] tool '{query_tool_name}' unexpected")
 
 
 async def pf_actor_act(job, job_token):
