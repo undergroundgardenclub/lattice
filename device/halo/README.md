@@ -8,15 +8,23 @@
 - [WHAT IS THE (((HALO)))](#what-is-the-halo)
 - [BUILDING YOUR (((HALO)))](#building-your-halo)
   - [CONCEPT REQUIREMENTS](#concept-requirements)
-  - [RASPBERRY PI -VS- ESP32](#raspberry-pi--vs--esp32)
   - [DEVICE CONTROL FLOWS](#device-control-flows)
-    - [MULTIPROCESSING/THREADS](#multiprocessingthreads)
+    - [PROCESSORS/THREADS](#processorsthreads)
     - [EVENTS/QUEUES](#eventsqueues)
 - [SETUP](#setup)
   - [PARTS LIST](#parts-list)
   - [BUILD](#build)
-  - [BOOT UP](#boot-up)
-    - [DEBUGGING](#debugging)
+- [BOOT UP](#boot-up)
+  - [LOAD/FLASH RASPBERRY PI OS](#loadflash-raspberry-pi-os)
+  - [SSH INTO RPI VIA VSCODE](#ssh-into-rpi-via-vscode)
+  - [APT UPDATE/UPGRADE](#apt-updateupgrade)
+  - [GIT INSTALL](#git-install)
+  - [LINUX DEPS](#linux-deps)
+  - [START UP ON POWER UP, SYSTEMCTL](#start-up-on-power-up-systemctl)
+  - [WIFI SETUP, NMCLI](#wifi-setup-nmcli)
+  - [RELOADING WHEN DOING CHANGES](#reloading-when-doing-changes)
+  - [DEBUGGING](#debugging)
+- [RASPBERRY PI -VS- ESP32 FOR MVP](#raspberry-pi--vs--esp32-for-mvp)
 - [CONTRIBUTING](#contributing)
 
 ---
@@ -34,11 +42,6 @@ The central goal of this project is to create multiple devices for video, audio,
 
 The HALO is our pursuit for making regalpunk wearable worn on the head, for capturing multiple streams of information starting simply with video/audio and also playing back audio to the wearer from the AI coordinating LATTICE system. The HALO, and this system, is placing its focus on those who have long duration tasks that involve movement and the use of both hands. **We are excited to push the ideas of realtime collective experiences**.
 
-
-| MVP Wearable | (((HALO))) Video/Audio Observations |  v1 AI Agent Reactions |
-| --- | --- | --- |
-| ![](../../docs/halo1.png) | ![](../../docs/observation.jpg) | ![](../../docs/observationsummary.png) |
-
 ---
 
 ## BUILDING YOUR (((HALO)))
@@ -54,7 +57,12 @@ For this scenario to work, we are simultaneously recording video/audio for recor
 > 
 > When it's done, your AI assistant pings your ear piece saying it's complete. Afterwards you bring the miexture to a sterlized work space, where you start to pour it into plates.
 
-Let me phrase these needs in CPU/GPU terms to inform what off the shelf hardware we'll use:
+| MVP Wearable | (((HALO))) Video/Audio Observations |  v1 AI Agent Reactions |
+| --- | --- | --- |
+| ![](../../docs/halo1.png) | ![](../../docs/observation.jpg) | ![](../../docs/observationsummary.png) |
+
+
+Here is what's happening on the device in terms of CPU/GPU activity:
 
   - Video Capture (GPU, capture not-blocking)
   - Audio Capture (CPU, capture blocking)
@@ -65,37 +73,11 @@ Let me phrase these needs in CPU/GPU terms to inform what off the shelf hardware
 
 ---
 
-### RASPBERRY PI -VS- ESP32
-
-When I began this project, I wanted a slim form factor so I explored the [ESP32 boards](https://github.com/youmustfight/chippy-P) for AI assistants to start. At first, I hit a few snags in my implementation:
-
-- Boards like `esp-wrover-kit` eased the learning curve for utilizing peripherals like cameras.
-- C++ is it a learning curve you can handle, typing will just drive you nuts for a bit. I avoided CircuitPython, which I think is the right move for ESP32 because I didn't want that overhead.
-- ESP32 projects I found on Github are bad and everyone assumes you're using SD cards.
-- You need to specify memory allocation for JSON document when making web requests, or properties will become null (ex: long string responses sent from the server were dropped because I didn't allocate enough bytes)
-- I2S is the protocol for audio input/output. It is an absolute pain, but it can work. Be aware of driver install/uninstalls depending on if you are doing input or output.
-- There are many ESP32 boards with different specs. The ESP32-WROVER kit had an attached camera, others didn't, memory on boards varied greatly, pins also changed.
-- The iteration loop has also been a bit faster doing SSH into a Raspberry Pi instead of having to keep reflashing my Arudino setup (btw, look into PlatformIO for doing builds/uploads within VSCode)
-
-**However, the deal breakers for ESP32 in this MVP came down to three things:**
-
-- **Pin constraints for I2S audio**:
-  -  When examining the pinouts map for the [ESP32-WROVER](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/_images/esp32-devkitC-v4-pinout.png) (or whatever board you have), I did not realize that the camera addon was using the I2S dedicated pin. As a result, I was unable to do both audio input and audio output. So in my [narrator_camera](https://github.com/youmustfight/chippy-P/tree/main/device/narrator_camera) test, I could only achieve audio output.
-  - I may have been able to do it by linking an external board, but this defeated the form factor goals I had for a small ESP32 board.
-- **No GPUs, Poorer Video Recording Quality/Smoothness**
-  - Capturing images was fine, but I wasn't thrilled about the qualtiy for video in a lab setting. I need higher frame rate and high detail. A GPU was going to be a big help.
-- **Limited CPU processing**
-  - While I didn't appreciate this at the time, the interaction patterns with buttons and LEDs as well as other onboard data processing and fetching tasks would have not worked smoothly on ESP32 boards due to their 2 processors. 4 processors on the Raspberry Pi makes for much better experience.
-
-So while I started with ESP32, I switched to Raspberry Pi to focus on the concept before worrying about form factor refinement. However, ESP32 can still be the right pick if you want to do a subset of functionality. Ex, I admire the Tab project and I think that for just audio input an ESP32 could be great.
-
----
-
 ### DEVICE CONTROL FLOWS
 
-Alright, now that I've shared a bit about the RPi's parts, especially the CPU/GPU, let me quickly illustration how I'm splitting work on processors/threads to keep functionality smooth.
+Now that you see the simultaneous activity on the device, here's how it's being coordinated via CPU/GPU with the `multiprocessing` module.
 
-#### MULTIPROCESSING/THREADS
+#### PROCESSORS/THREADS
 
 ![](../../docs/halocores.png)
 
@@ -190,9 +172,9 @@ If you are new to hardware, buy the pack below to get a slew of buttons/wires. Y
 
 I will provide expanded instructions on this later, for both the initial setup using a breadboard and no case and then soddering components to be secure. For now quick checklist and helpful file references. This also continues to be a work in progress moving towards a more regalpunk head piece.
 
-| V2 Breadboard + Rubberbands | V2 Soddered | V2 Encased (Not Ideal Heat) | V3 New Porous Case |
+| V2 Breadboard + Rubberbands | V2 Soddered | V2 Closed Case (Heats Up) | V2 New Porous Case |
 | --- | --- | --- | --- |
-| ![HALO V2 Board](../../docs/haloV2-1.jpeg) | ![HALO V2 Board](../../docs/haloV2-2.jpeg) | ![HALO V2 Encased](../../docs/haloV2-3.jpeg) | ![HALO V3 New Case](../../docs/haloV2-4.jpeg) |
+| ![HALO V2 Board](../../docs/haloV2-1.jpeg) | ![HALO V2 Board](../../docs/haloV2-2.jpeg) | ![HALO V2 Encased](../../docs/haloV2-3.jpeg) | ![HALO V2 New Case](../../docs/haloV2-4.jpeg) |
 
 - Peripherals:
   - Raspberry Pi 4B Pinout: [https://www.electrorules.com/raspberry-pi-4-gpio-pnout/](https://www.electrorules.com/raspberry-pi-4-gpio-pnout/) (tells you the IDs of pins for reference in your code)
@@ -205,11 +187,11 @@ I will provide expanded instructions on this later, for both the initial setup u
 
 ---
 
-### BOOT UP
+## BOOT UP
 
-With our parts stitched together, let's load the Raspberry Pi OS and get the app running.
+With our device stitched together, let's get the app running.
 
-**RASPBERRY PI OS**
+### LOAD/FLASH RASPBERRY PI OS
 
 Find latest OS: https://www.raspberrypi.com/software/operating-systems/#raspberry-pi-os-64-bit. Install via Raspberry Pi installer. You can use the xz files, you don't need to unzip. Be sure to customize settings for initial WiFi connection and turn on the ssh connections setting. **DO NOT use Lite version for now**. I recently needed pipewire's `pw-play`. Save that optimization for later.
 
@@ -218,30 +200,14 @@ When installing, be sure to **enable SSH access** in the custom settings options
 Now that we have our SD card flashed, put it in the RPi and power it up. Now let's connect.
 
 
-**SSH VIA VSCODE**
+### SSH INTO RPI VIA VSCODE
 
 Grab the VS code [Remote-SSH plugin](https://help.rc.ufl.edu/doc/SSH_Using_VSCode#:~:text=Visual%20Studio%20Code%20will%20connect,connected%20to%20a%20login%20node). Connect to `pi@raspberrypi.local`, add to your ssh config in the plugin extension list.
 
 If you reinstall the RPi OS, you will need to re-add your fingerprint when connecting. This may require you remove configs in `~/.ssh/known_hosts` for `raspberrypi.local` or whatever setting you used. Be sure to include the user in your ssh path (likely the default "pi" unless you manually changed on OS install)
 
 
-**WIFI**
-
-The 'bookworm' Raspberry Pi OS has apparently drastically changed wifi configs to no longer use wpa_supplicant: https://www.jeffgeerling.com/blog/2023/nmcli-wifi-on-raspberry-pi-os-12-bookworm + https://forums.raspberrypi.com/viewtopic.php?t=357739#p2145139
-
-To add a new WiFi network, you can use the following command from a terminal when SSH'd in.
-```
-sudo nmcli c add type wifi con-name <connection-name> ifname wlan0 ssid <yourssid>
-sudo nmcli c modify <connection-name> wifi-sec.key-mgmt wpa-psk wifi-sec.psk <wifipassword>
-```
-
-Your Raspberry Pi should auto-connect to networks as needed, but you can force a change via:
-```
-sudo nmcli c up <connection-name>
-```
-
-
-**LINUX INSTALLS**
+### APT UPDATE/UPGRADE
 
 Update/upgrade packages we're about to install:
 ```
@@ -249,7 +215,7 @@ sudo apt update
 sudo apt full-upgrade
 ```
 
-**GIT**
+### GIT INSTALL
 
 **This section will give many of you heartburn, I'll change it**. We're going to clone the whole repo to our Raspberry Pi, even though we'll just run the code in the `device/halo` directory. We'll eventually turn this into a sub-module. But let's setup git.
 
@@ -267,22 +233,38 @@ git config --global user.email "you@example.com"
 
 Now clone the repo to your Raspberry Pi!
 
-**LINUX DEPS**
+### LINUX DEPS
 
 To simplify packages install/setup, run `bash setup.sh` in the root of the `deivce/halo` directory. You can explore that file to see what dependencies we're installing, but they all relate to video/audio.
 
-**STARTUP APP ON POWER UP**
+### START UP ON POWER UP, SYSTEMCTL
 
 Now that we have our dependencies, it's time to tell the device that our application should run on boot. This is going to be done through `systemd`, which is the preferred way on the new RPi OS (older methods use init or cron).
 
 All setup can be done with `bash setupd.sh`
 
-**CODING IMPROVEMENTS**
+### WIFI SETUP, NMCLI
 
-With the service now running, you can make changes and re-run `bash setupd.sh` to restart the service (or run the `systemctl restart ...` command you'll see in the `setupd.sh` file)
+The 'bookworm' Raspberry Pi OS has apparently drastically changed wifi configs to no longer use wpa_supplicant: https://www.jeffgeerling.com/blog/2023/nmcli-wifi-on-raspberry-pi-os-12-bookworm + https://forums.raspberrypi.com/viewtopic.php?t=357739#p2145139
+
+To add a new WiFi network, you can use the following command from a terminal when SSH'd in.
+```
+sudo nmcli c add type wifi con-name <connection-name> ifname wlan0 ssid <yourssid>
+sudo nmcli c modify <connection-name> wifi-sec.key-mgmt wpa-psk wifi-sec.psk <wifipassword>
+```
+
+Your Raspberry Pi should auto-connect to networks as needed, but you can force a change via:
+```
+sudo nmcli c up <connection-name>
+```
 
 
-#### DEBUGGING
+### RELOADING WHEN DOING CHANGES
+
+To quickly restart the service after making changes, you can run `sudo systemctl restart lattice.halo.service` or re-run `bash setupd.sh` which includes that systemctl restart command.
+
+
+### DEBUGGING
 
 At the moment, not everything makes it to log files but everything makes it to stdout. When in doubt, just run `sudo bash setupd.sh` which will restart the service and get you listening to output. You may see exceptions crashing processes there.
 
@@ -299,7 +281,35 @@ pw-play path-to-file.mp3
 
 ---
 
+## RASPBERRY PI -VS- ESP32 FOR MVP
+
+When I began this project, I wanted a slim form factor so I explored the [ESP32 boards](https://github.com/youmustfight/chippy-P) for AI assistants to start. I thought I'd share some learnings from that attempt and which steered me towards the RPi for MVP:
+
+- Boards like `esp-wrover-kit` eased the learning curve for utilizing peripherals like cameras.
+- C++ is it a learning curve you can handle, typing will just drive you nuts for a bit. I avoided CircuitPython, which I think is the right move for ESP32 because I didn't want that overhead.
+- ESP32 projects I found on Github are bad and everyone assumes you're using SD cards.
+- You need to specify memory allocation for JSON document when making web requests, or properties will become null (ex: long string responses sent from the server were dropped because I didn't allocate enough bytes)
+- I2S is the protocol for audio input/output. It is an absolute pain, but it can work. Be aware of driver install/uninstalls depending on if you are doing input or output.
+- There are many ESP32 boards with different specs. The ESP32-WROVER kit had an attached camera, others didn't, memory on boards varied greatly, pins also changed.
+- The iteration loop has also been a bit faster doing SSH into a Raspberry Pi instead of having to keep reflashing my Arudino setup (btw, look into PlatformIO for doing builds/uploads within VSCode)
+
+**However, the deal breakers for ESP32 in this MVP came down to three things:**
+
+- **Pin constraints for I2S audio**:
+  -  When examining the pinouts map for the [ESP32-WROVER](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/_images/esp32-devkitC-v4-pinout.png) (or whatever board you have), I did not realize that the camera addon was using the I2S dedicated pin. As a result, I was unable to do both audio input and audio output. So in my [narrator_camera](https://github.com/youmustfight/chippy-P/tree/main/device/narrator_camera) test, I could only achieve audio output.
+  - I may have been able to do it by linking an external board, but this defeated the form factor goals I had for a small ESP32 board.
+- **No GPUs, Poorer Video Recording Quality/Smoothness**
+  - Capturing images was fine, but I wasn't thrilled about the qualtiy for video in a lab setting. I need higher frame rate and high detail. A GPU was going to be a big help.
+- **Limited CPU processing**
+  - While I didn't appreciate this at the time, the interaction patterns with buttons and LEDs as well as other onboard data processing and fetching tasks would have not worked smoothly on ESP32 boards due to their 2 processors. 4 processors on the Raspberry Pi makes for much better experience.
+
+So while I started with ESP32, I switched to Raspberry Pi to focus on the concept before worrying about form factor refinement. However, ESP32 can still be the right pick if you want to do a subset of functionality. Ex, I admire the Tab project and I think that for just audio input an ESP32 could be great.
+
+---
+
 ## CONTRIBUTING
 
 Open up some discssions, issues, and PRs about your wild ideas. We want to use Github discussions to ensure knowledge can be found by new folks setting up their systems. In the not so distant future, we can build a lattice system for contributors to work together through.
+
+If you want to do aesthetically wild and interesting headware that involves metal and jewelry-like aesthetics as well as a custom board let me know :)
 
