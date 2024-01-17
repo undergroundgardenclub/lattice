@@ -17,8 +17,8 @@ This system began development within our community of [self-taught synthetic bio
 | 🟩 | STAGE | DESCRIPTION | EX |
 | --- | --- | --- | --- |
 | 🟩 | ALPHA1 | Wearable device sensor data ingestion (i.e., HALO) and passive multi-modal knowledge distillation. Callable AI tools | |
-| 🟦 | ALPHA2 | Passive Observer AI agent + Multi-Stream | |
-| ⬜️ | ALPHA3 | Plugins system for AI actions to external services | |
+| 🟩 | ALPHA2 | Passive Observer AI agent + Multi-Stream | |
+| 🟦 | ALPHA3 | Plugins system for AI actions to external services | |
 | ⬜️ | ALPHA4 | Sensor data ingestion (i.e., lab equipment, orb) | |
 | ⬜️ | ALPHA5 | Truffle Brain integration. Control the Weights |
 
