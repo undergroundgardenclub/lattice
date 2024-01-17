@@ -33,7 +33,7 @@ This system began development within our community of [self-taught synthetic bio
 
 ##### SYSTEM DESIGN
 
-ATM, everything is setup to run locally. There are two primary pieces:
+There are two primary pieces to this tool at the moment:
 
 > **Hardware**: Build and setup instructions are in the `/devices` directory. We're using Raspberry Pis to simplify using this tool and ensuring good video/audio processing. Once interaction patterns are sturdy, we'll create our regalpunk aesthetic head piece and hardware configuration.
 
@@ -43,13 +43,16 @@ We want to push exploration of interactivity on devices and the edge. Viewing th
 
 ##### RUNNING LOCALLY
 
+Right now, we're just concerned with running locally, and using `ngrok` to push data from devices to our backend. Dockerized services should make it easy for you to run with a cloud provider if you like. As for running locally:
+
 - Create an `.env` file in the root directory for docker compose. This requires a few services which you will see in the backend `env.py`
 - Build/setup your [HALO](/device/halo/) hardware device (instructions in [sub-directory](/device/halo/))
-- Start a `ngrok` tunnel pointing at the local API for your device to send data through (to be improved/changed)
+- Start a `ngrok` tunnel pointing at the local API for your device to send data through (to be improved/changed) Ex cmd I run: `ngrok http 3000 --domain yourprefixhere.ngrok.app --scheme=http`
 - Ensure your hardware device's API url env param is pointing at that ngrok tunnel endpoint (may require forcing to `http` at the moment)
+- `bash manage.sh local setup` to do installs for things you'll need
 - `docker-compose up` the API/Worker/Queue/PGVector DB
-- TODO: run the migration script to update tables/cols
-- Triple click to begin your omnipresecent observer!
+- `bash manage.sh local migrate-app head` to get your postgres db updated
+- Triple click to begin your (((HALO))) observer!
 - Build collective knowledge, informing future actions you and your collective will take.
 
 ---
